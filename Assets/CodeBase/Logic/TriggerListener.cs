@@ -7,10 +7,10 @@ namespace CodeBase.Logic
 	public class TriggerListener : MonoBehaviour
 	{
 		public event Action<Collider2D> Entered;
-		public event Action<Collider2D> Exited;
+		public event Action<Collider2D> Canceled;
 
 		private void OnTriggerEnter2D(Collider2D col) => Entered?.Invoke(col);
 		
-		private void OnTriggerExit2D(Collider2D col) => Exited?.Invoke(col);
+		private void OnTriggerExit2D(Collider2D col) => Canceled?.Invoke(col);
 	}
 }

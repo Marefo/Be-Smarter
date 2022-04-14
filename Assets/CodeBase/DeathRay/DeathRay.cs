@@ -6,7 +6,7 @@ namespace CodeBase.DeathRay
 	[RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
 	public class DeathRay : MonoBehaviour
 	{
-		public bool Active { get; private set; } = true;
+		public bool Active { get; private set; }
 		
 		private Collider2D _collider;
 		private SpriteRenderer _spriteRenderer;
@@ -22,7 +22,7 @@ namespace CodeBase.DeathRay
 			if(col.TryGetComponent(out HeroDeath heroDeath))
 				heroDeath.Die();
 		}
-		
+
 		public void Enable()
 		{
 			Active = true;
@@ -30,7 +30,7 @@ namespace CodeBase.DeathRay
 			_collider.enabled = true;
 			_spriteRenderer.enabled = true;
 		}
-		
+
 		public void Disable()
 		{
 			Active = false;

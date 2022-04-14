@@ -9,7 +9,7 @@ namespace CodeBase.Hero
 		
 		public void Die()
 		{
-			if (TryGetComponent(out HeroMove heroMove))
+			if (TryGetComponent(out HeroMovement heroMove))
 				heroMove.enabled = false;
 
 			HideSprite();

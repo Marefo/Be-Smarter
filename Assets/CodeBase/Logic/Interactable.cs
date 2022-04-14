@@ -3,9 +3,13 @@ using UnityEngine;
 
 namespace CodeBase.Logic
 {
-	public abstract class Interactable : MonoBehaviour
+	public class Interactable : MonoBehaviour
 	{
-		public virtual event Action InteractionEnabled;
-		public virtual event Action InteractionDisabled;
+		public event Action InteractionEnabled;
+		public event Action InteractionDisabled;
+
+		public void Enable() => InteractionEnabled?.Invoke();
+		
+		public void Disable() => InteractionDisabled?.Invoke();
 	}
 }

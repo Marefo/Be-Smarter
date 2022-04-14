@@ -10,6 +10,7 @@ namespace CodeBase.Services
 	{
 		public event Action JumpBtnPressed;
 		public event Action InteractBtnPressed;
+		public event Action RestartBtnPressed;
 		public float AxisX => _input.Player.Move.ReadValue<Vector2>().x;
 
 		private readonly InputActions _input;
@@ -21,7 +22,7 @@ namespace CodeBase.Services
 			_input.Enable();
 			SubscribeEvents();
 
-			Debug.Log("Input service initialized");
+			Debug.Log("Input service initialized\n----");
 		}
 
 		public void Dispose()
@@ -34,16 +35,18 @@ namespace CodeBase.Services
 		{
 			_input.Player.Jump.performed += OnJumpActionPerformed;
 			_input.Player.Interact.performed += OnInteractActionPerformed;
+			_input.Gameplay.Restart.performed += OnRestartActionPerformed;
 		}
 
 		private void CleanUp()
 		{
 			_input.Player.Jump.performed -= OnJumpActionPerformed;
 			_input.Player.Interact.performed -= OnInteractActionPerformed;
+			_input.Gameplay.Restart.performed -= OnRestartActionPerformed;
 		}
 
+		private void OnRestartActionPerformed(InputAction.CallbackContext obj) => RestartBtnPressed?.Invoke();
 		private void OnJumpActionPerformed(InputAction.CallbackContext ctx) => JumpBtnPressed?.Invoke();
-		
 		private void OnInteractActionPerformed(InputAction.CallbackContext obj) => InteractBtnPressed?.Invoke();
 	}
 }

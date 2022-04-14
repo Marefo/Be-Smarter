@@ -164,6 +164,33 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Gameplay",
+            "id": "fcfa786f-b054-4b48-9102-6a40b915a721",
+            "actions": [
+                {
+                    "name": "Restart",
+                    "type": "Button",
+                    "id": "082bdd38-44a1-42dd-a7f4-abfb2a379d59",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "c40b29d2-a52c-42f3-bbc1-beb8b27a1eaf",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Restart",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

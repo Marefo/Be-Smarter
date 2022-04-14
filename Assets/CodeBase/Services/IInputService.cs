@@ -6,6 +6,7 @@ namespace CodeBase.Services
 	{
 		event Action JumpBtnPressed;
 		event Action InteractBtnPressed;
+		event Action RestartBtnPressed;
 		float AxisX { get; }
 	}
 }

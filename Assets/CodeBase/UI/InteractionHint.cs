@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Runtime.InteropServices;
+using CodeBase.DeathRay;
 using CodeBase.Logic;
 using UnityEngine;
+using Object = System.Object;
 
 namespace CodeBase.UI
 {
 	public class InteractionHint : MonoBehaviour
 	{
-		[SerializeField] private Interactable _interactable;
 		[SerializeField] private GameObject _visualHint;
+		[SerializeField] private Interactable _interactable;
 		
 		private void Start()
 		{
