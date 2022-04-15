@@ -18,7 +18,7 @@ namespace CodeBase.Infrastructure.Installers
 
 		private void BindHero()
 		{
-			HeroMovement heroMovement = Container.InstantiatePrefabForComponent<HeroMovement>(_heroPrefab, _heroSpawnPoint);
+			HeroMovement heroMovement = Container.InstantiatePrefabForComponent<HeroMovement>(_heroPrefab, _heroSpawnPoint.position, Quaternion.identity, null);
 			Container.Bind<HeroMovement>().FromInstance(heroMovement).AsSingle();
 		}
 	}

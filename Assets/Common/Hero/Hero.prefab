@@ -59,7 +59,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 1
+  orthographic size: 1.2
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 4631875493432197095}
   - component: {fileID: 4631875493432197094}
   - component: {fileID: 4631875493432197093}
-  - component: {fileID: 4631875493432197092}
+  - component: {fileID: 6125312461524093539}
   - component: {fileID: 1782046614081143452}
   - component: {fileID: 4631875493432197090}
   - component: {fileID: 4631875493432197091}
@@ -204,7 +204,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.00019399077}
+  m_Offset: {x: 0, y: -0.000044308603}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -215,9 +215,9 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.12, y: 0.23968218}
+  m_Size: {x: 0.12, y: 0.24015878}
   m_EdgeRadius: 0
---- !u!50 &4631875493432197092
+--- !u!50 &6125312461524093539
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
@@ -225,14 +225,14 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4631875493432197096}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 1
@@ -250,14 +250,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 910c646b2102435b95d9666166eff3b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _unitBounds:
-    m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 0.068, y: 0.123, z: 0}
+  _physicalObjFilter:
+    useTriggers: 0
+    useLayerMask: 1
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 256
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
   _physicalObjLayer:
     serializedVersion: 2
     m_Bits: 256
+  _unitBounds:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 0.055, y: 0.105, z: 0}
   _sideRaysCount: 3
-  _raysLength: 0.03
+  _verticalRaysLength: 0.04
+  _horizontalRaysLength: 0.06
   _raysShift: 0.01
 --- !u!114 &4631875493432197090
 MonoBehaviour:
@@ -271,9 +286,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46fa9f3050ba4627a04f05e9ae5e22b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _acceleration: 0.08
-  _deAcceleration: 0.07
-  _maxMoveSpeed: 0.01
+  _maxMoveSpeed: 2.5
+  _acceleration: 6
+  _deAcceleration: 12
+  _climbAssistHeight: 0.01
+  _minFallSpeed: 7
+  _maxFallSpeed: 15
+  _jumpHeight: 3.3
+  _apexThreshold: 3
+  _apexAdditionalSpeed: 1.5
+  _bufferedJumpTime: 0.1
 --- !u!114 &4631875493432197091
 MonoBehaviour:
   m_ObjectHideFlags: 0
