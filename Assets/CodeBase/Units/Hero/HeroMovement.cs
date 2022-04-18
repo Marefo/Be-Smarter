@@ -1,5 +1,6 @@
 ﻿using CodeBase.Collisions;
 using CodeBase.Infrastructure;
+using CodeBase.Logic;
 using CodeBase.Services;
 using DG.Tweening;
 using UnityEngine;
@@ -7,16 +8,19 @@ using Zenject;
 
 namespace CodeBase.Units.Hero
 {
-	[RequireComponent(typeof(CollisionDetector), typeof(BoxCollider2D), typeof(SpriteRenderer))]
+	[RequireComponent(typeof(CollisionDetector), typeof(BoxCollider2D))]
 	[RequireComponent(typeof(UnitAnimator))]
-	public class HeroMovement : MonoBehaviour
+	public class HeroMovement : MonoBehaviour, IHoldingBtnActivator
 	{
+		public float MoveDirection => transform.localScale.x;
+		public bool IsWalking => Mathf.Abs(_currentHorizontalSpeed) > 0;
+		public float SpeedPercent => Mathf.InverseLerp(0, _settings.MaxMoveSpeed, Mathf.Abs(_currentHorizontalSpeed));
+		
 		[SerializeField] private HeroMoveSettings _settings;
 		
-		private readonly int _closestPointFindAttempts = 5;
+		private readonly int _closestPointFindAttempts = 10;
 		
 		private IInputService _inputService;
-		private SpriteRenderer _sprite;
 		private Vector2 _colliderBottomCenter;
 		private CollisionDetector _collisionDetector;
 		private LevelPreparer _levelPreparer;
@@ -30,14 +34,12 @@ namespace CodeBase.Units.Hero
 		private float _fallSpeed;
 		private float _lastJumpBtnPressTime;
 		private bool _inputDisabled = false;
-		private bool _isJumping = false;
 
 		[Inject]
 		private void Construct(IInputService inputService, LevelPreparer levelPreparer)
 		{
 			_inputService = inputService;
 			_levelPreparer = levelPreparer;
-			_sprite = GetComponent<SpriteRenderer>();
 			_collisionDetector = GetComponent<CollisionDetector>();
 			_animator = GetComponent<UnitAnimator>();
 		}
@@ -96,9 +98,9 @@ namespace CodeBase.Units.Hero
 		private void FlipSprite()
 		{
 			if (_inputService.AxisX > 0)
-				_sprite.flipX = false;
+				transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
 			else if (_inputService.AxisX < 0)
-				_sprite.flipX = true;
+				transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
 		}
 
 		private void Tilt()

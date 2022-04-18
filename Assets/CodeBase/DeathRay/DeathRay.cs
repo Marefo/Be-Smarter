@@ -1,4 +1,5 @@
 ﻿using CodeBase.Logic;
+using DG.Tweening;
 using UnityEngine;
 
 namespace CodeBase.DeathRay
@@ -7,7 +8,7 @@ namespace CodeBase.DeathRay
 	public class DeathRay : MonoBehaviour
 	{
 		public bool Active { get; private set; }
-		
+
 		private Collider2D _collider;
 		private SpriteRenderer _spriteRenderer;
 
@@ -28,7 +29,7 @@ namespace CodeBase.DeathRay
 			Active = true;
 			
 			_collider.enabled = true;
-			_spriteRenderer.enabled = true;
+			_spriteRenderer.DOFade(1, 0.15f);
 		}
 
 		public void Disable()
@@ -36,7 +37,7 @@ namespace CodeBase.DeathRay
 			Active = false;
 			
 			_collider.enabled = false;
-			_spriteRenderer.enabled = false;
+			_spriteRenderer.DOFade(0, 0.15f);
 		}
 	}
 }

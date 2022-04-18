@@ -7,66 +7,32 @@ using Zenject;
 
 namespace CodeBase.DeathRay
 {
-	[RequireComponent(typeof(Interactable))]
+	[RequireComponent(typeof(Interactable), typeof(Animator))]
 	public class DeathRaySwitchingButton : DeathRayButton
 	{
 		public override event Action StateChanged;
 
-		[SerializeField] private TriggerListener _interactionZoneTrigger;
-		
-		private IInputService _inputService;
 		private Interactable _interactable;
-		private bool _canInteract = false;
-
-		[Inject]
-		private void Construct(IInputService inputService)
-		{
-			_inputService = inputService;
-			_interactable = GetComponent<Interactable>();
-		} 
+		private Animator _animator;
 		
+		private readonly int _pressHash = Animator.StringToHash("Press");
+
 		private void Start()
 		{
-			_interactionZoneTrigger.Entered += OnInteractionZoneEnter;
-			_interactionZoneTrigger.Canceled += OnInteractionZoneCancel;
-			_inputService.InteractBtnPressed += OnInteractBtnPress;
+			_interactable = GetComponent<Interactable>();
+			_animator = GetComponent<Animator>();
+
+			_interactable.Interacted += OnInteract;
 		}
 
 		private void OnDestroy()
 		{
-			_interactionZoneTrigger.Entered -= OnInteractionZoneEnter;
-			_interactionZoneTrigger.Canceled -= OnInteractionZoneCancel;
-			_inputService.InteractBtnPressed -= OnInteractBtnPress;
+			_interactable.Interacted -= OnInteract;
 		}
 
-		private void OnInteractionZoneEnter(Collider2D col)
+		private void OnInteract(HeroMovement heroMovement)
 		{
-			if (col.TryGetComponent(out HeroMovement heroMove))
-				EnableInteraction();
-		}
-
-		private void OnInteractionZoneCancel(Collider2D other)
-		{
-			if (other.TryGetComponent(out HeroMovement heroMove))
-				DisableInteraction();
-		}
-
-		private void EnableInteraction()
-		{
-			_canInteract = true;
-			_interactable.Enable();
-		}
-
-		private void DisableInteraction()
-		{
-			_canInteract = false;
-			_interactable.Disable();
-		}
-
-		private void OnInteractBtnPress()
-		{
-			if(_canInteract == false) return;		
-			
+			_animator.SetTrigger(_pressHash);
 			StateChanged?.Invoke();
 		}
 	}

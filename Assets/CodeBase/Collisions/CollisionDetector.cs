@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeBase.Extensions;
+using CodeBase.Logic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace CodeBase.Collisions
@@ -71,12 +73,6 @@ namespace CodeBase.Collisions
 		
 			return new Vector2(closestPositionX, climbedPositionY);
 		}
-		
-		private void InitBoxCollisions()
-		{
-			LastFrameBoxCollisions = new BoxCollisions();
-			BoxCollisions = new BoxCollisions();
-		}
 
 		public void CalculateRaysPosition()
 		{
@@ -135,7 +131,44 @@ namespace CodeBase.Collisions
 			if (LastFrameBoxCollisions.BottomCollision == false && BoxCollisions.BottomCollision == true)
 				BottomCollided?.Invoke();
 		}
+
+		public void TryGetComponentFromLeftCollisions<T>(out List<T> results)
+		{
+			List<GameObject> collisions = GetCollidedObjects(_boxRays.LeftRays).Where(obj => obj != null).Select(obj => obj.gameObject).ToList();
+
+			GetComponentsFromList(collisions, out List<T> leftResults);
+
+			results = leftResults.ToList();
+		}
+
+		public void TryGetComponentFromRightCollisions<T>(out List<T> results)
+		{			
+			List<GameObject> collisions = GetCollidedObjects(_boxRays.RightRays).Where(obj => obj != null).Select(obj => obj.gameObject).ToList();
+
+			GetComponentsFromList(collisions, out List<T> rightResults);
+
+			results = rightResults.ToList();
+		}
 		
+		private void InitBoxCollisions()
+		{
+			LastFrameBoxCollisions = new BoxCollisions();
+			BoxCollisions = new BoxCollisions();
+		}
+
+		private void GetComponentsFromList<T>(List<GameObject> gameObjects, out List<T> list)
+		{
+			list = new List<T>();
+			
+			foreach (GameObject gameObj in gameObjects)
+			{
+				if (gameObj.TryGetComponent(out T component))
+				{
+					list?.Add(component);
+				}
+			}
+		}
+
 		private List<Collider2D> GetCollidedObjects(RayData ray)
 		{
 			var rays = EvaluateRaysPositions(ray);

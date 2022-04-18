@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using CodeBase.Collisions;
 using CodeBase.Infrastructure;
 using CodeBase.Logic;
@@ -84,7 +85,7 @@ namespace CodeBase.Units.Enemy
 			_collisionDetector.UpdateCollisionEvents();
 			
 			if(_levelPreparer.Prepared == false) return;
-			
+
 			Chase();
 			Tilt();
 			CalculateGravity();
@@ -92,8 +93,12 @@ namespace CodeBase.Units.Enemy
 
 		private void OnAgroZoneEnter(Collider2D obj)
 		{
-			if (obj.TryGetComponent(out HeroMovement heroMovement))
+			if (!obj.TryGetComponent(out HeroMovement heroMovement)) return;
+			
+			if (BlockedByCube() == false)
 				Jump();
+			else
+				_canChase = true;
 		}
 
 		private void OnAgroZoneCancel(Collider2D obj)
@@ -168,6 +173,7 @@ namespace CodeBase.Units.Enemy
 			if (CanMove() == false)
 			{
 				TryClimbAssist();
+				_animator.PlayWalk(0);
 				return;
 			}
 			
@@ -242,6 +248,14 @@ namespace CodeBase.Units.Enemy
 
 		private void FlipSprite() => _sprite.flipX = GetMoveDirection() == -1;
 
+		private bool BlockedByCube()
+		{
+			_collisionDetector.TryGetComponentFromLeftCollisions(out List<Cube> leftSideCubes);
+			_collisionDetector.TryGetComponentFromRightCollisions(out List<Cube> rightSideCubes);
+
+			return _moveDirection > 0 && rightSideCubes.Count > 0 || _moveDirection < 0 && leftSideCubes.Count > 0;
+		}
+		
 		private bool CanMove()
 		{
 			return _inputDisabled == false &&
