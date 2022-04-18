@@ -1,4 +1,4 @@
-﻿using CodeBase.Hero;
+﻿using CodeBase.Logic;
 using UnityEngine;
 
 namespace CodeBase.DeathRay
@@ -19,8 +19,8 @@ namespace CodeBase.DeathRay
 
 		private void OnTriggerEnter2D(Collider2D col)
 		{
-			if(col.TryGetComponent(out HeroDeath heroDeath))
-				heroDeath.Die();
+			if(col.TryGetComponent(out IMortal mortal))
+				mortal.Die();
 		}
 
 		public void Enable()

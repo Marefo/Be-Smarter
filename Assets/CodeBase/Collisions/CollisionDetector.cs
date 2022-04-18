@@ -8,9 +8,11 @@ namespace CodeBase.Collisions
 {
 	public class CollisionDetector : MonoBehaviour
 	{
+		public event Action Collided;
 		public event Action BottomCollided;
 		
 		public BoxCollisions BoxCollisions { get; private set; }
+		public BoxCollisions LastFrameBoxCollisions { get; private set; }
 		public Bounds Bounds => _unitBounds;
 		public float VerticalRaysLength => _verticalRaysLength;
 		
@@ -21,6 +23,7 @@ namespace CodeBase.Collisions
 		[SerializeField] private int _sideRaysCount = 3;
 		[SerializeField] private float _verticalRaysLength = 0.1f;
 		[SerializeField] private float _horizontalRaysLength = 0.1f;
+		[SerializeField] private float _raysInnerOffset = 0.01f;
 		[SerializeField, Range(0.01f, 0.1f)] private float _raysShift = 0.1f;
 
 		private Bounds _unitsBoundsInWorld;
@@ -29,12 +32,6 @@ namespace CodeBase.Collisions
 		private void Start()
 		{
 			InitBoxCollisions();
-		}
-
-		private void LateUpdate()
-		{
-			UpdateRaysPosition();
-			UpdateBoxCollisions();
 		}
 
 		private void OnDrawGizmos() {
@@ -55,47 +52,87 @@ namespace CodeBase.Collisions
 		public Collider2D GetFirstRightSideCollision() => GetCollidedObjects(_boxRays.RightRays)[0];
 		public Collider2D GetFirstLeftSideCollision() => GetCollidedObjects(_boxRays.LeftRays)[0];
 
-		private void InitBoxCollisions() => BoxCollisions = new BoxCollisions();
+		public Vector2 GetClimbPointToCollider(Collider2D colliderForClimb, float climbHeight)
+		{
+			bool canClimbAssist = Bounds.min.y + climbHeight >= colliderForClimb.bounds.max.y;
 
-		private void UpdateRaysPosition()
+			if (canClimbAssist == false) return Vector2.zero;
+			
+			float collidedMinX = colliderForClimb.bounds.min.x;
+			float collidedMaxX = colliderForClimb.bounds.max.x;
+			
+			float closestPositionX =
+				Mathf.Abs(transform.position.x - collidedMinX) <
+				Mathf.Abs(transform.position.x - collidedMaxX)
+					? collidedMinX
+					: collidedMaxX;
+
+			float climbedPositionY = transform.position.y + colliderForClimb.bounds.max.y + VerticalRaysLength - Bounds.min.y;
+		
+			return new Vector2(closestPositionX, climbedPositionY);
+		}
+		
+		private void InitBoxCollisions()
+		{
+			LastFrameBoxCollisions = new BoxCollisions();
+			BoxCollisions = new BoxCollisions();
+		}
+
+		public void CalculateRaysPosition()
 		{
 			_unitsBoundsInWorld = _unitBounds;
 			_unitsBoundsInWorld.center = transform.position;
 
 			RayData topRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.min.x + _raysShift, _unitsBoundsInWorld.max.y),
-				new Vector2(_unitsBoundsInWorld.max.x - _raysShift, _unitsBoundsInWorld.max.y),
+				new Vector2(_unitsBoundsInWorld.min.x + _raysShift, _unitsBoundsInWorld.max.y - _raysInnerOffset),
+				new Vector2(_unitsBoundsInWorld.max.x - _raysShift, _unitsBoundsInWorld.max.y - _raysInnerOffset),
 				Vector2.up, _verticalRaysLength
 			);
 			RayData bottomRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.min.x + _raysShift, _unitsBoundsInWorld.min.y),
-				new Vector2(_unitsBoundsInWorld.max.x - _raysShift, _unitsBoundsInWorld.min.y),
+				new Vector2(_unitsBoundsInWorld.min.x + _raysShift, _unitsBoundsInWorld.min.y + _raysInnerOffset),
+				new Vector2(_unitsBoundsInWorld.max.x - _raysShift, _unitsBoundsInWorld.min.y + _raysInnerOffset),
 				Vector2.down, _verticalRaysLength
 			);
 			RayData leftRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.min.x, _unitsBoundsInWorld.min.y + _raysShift),
-				new Vector2(_unitsBoundsInWorld.min.x, _unitsBoundsInWorld.max.y - _raysShift),
+				new Vector2(_unitsBoundsInWorld.min.x + _raysInnerOffset, _unitsBoundsInWorld.min.y + _raysShift),
+				new Vector2(_unitsBoundsInWorld.min.x + _raysInnerOffset, _unitsBoundsInWorld.max.y - _raysShift),
 				Vector2.left, _horizontalRaysLength
 			);
 			RayData rightRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.max.x, _unitsBoundsInWorld.min.y + _raysShift),
-				new Vector2(_unitsBoundsInWorld.max.x, _unitsBoundsInWorld.max.y - _raysShift),
+				new Vector2(_unitsBoundsInWorld.max.x - _raysInnerOffset, _unitsBoundsInWorld.min.y + _raysShift),
+				new Vector2(_unitsBoundsInWorld.max.x - _raysInnerOffset, _unitsBoundsInWorld.max.y - _raysShift),
 				Vector2.right, _horizontalRaysLength
 			);
 
 			_boxRays = new BoxRays(topRay, bottomRay, leftRay, rightRay);
 		}
 
-		private void UpdateBoxCollisions()
+		public void UpdateBoxCollisions()
 		{
-			bool oldBottomCollision = BoxCollisions.BottomCollision;
+			LastFrameBoxCollisions.BottomCollision = BoxCollisions.BottomCollision;
+			LastFrameBoxCollisions.TopCollision = BoxCollisions.TopCollision;
+			LastFrameBoxCollisions.LeftCollision = BoxCollisions.LeftCollision;
+			LastFrameBoxCollisions.RightCollision = BoxCollisions.RightCollision;
 			
 			BoxCollisions.BottomCollision = RaysDetect(_boxRays.BottomRays);
 			BoxCollisions.TopCollision = RaysDetect(_boxRays.TopRays);
 			BoxCollisions.LeftCollision = RaysDetect(_boxRays.LeftRays);
 			BoxCollisions.RightCollision = RaysDetect(_boxRays.RightRays);
+		}
 
-			if (oldBottomCollision == false && BoxCollisions.BottomCollision == true)
+		public void UpdateCollisionEvents()
+		{
+			if (
+				LastFrameBoxCollisions.TopCollision == false && BoxCollisions.TopCollision == true ||
+				LastFrameBoxCollisions.BottomCollision == false && BoxCollisions.BottomCollision == true ||
+				LastFrameBoxCollisions.LeftCollision == false && BoxCollisions.LeftCollision == true ||
+				LastFrameBoxCollisions.RightCollision == false && BoxCollisions.RightCollision == true
+			)
+			{
+				Collided?.Invoke();
+			}
+				
+			if (LastFrameBoxCollisions.BottomCollision == false && BoxCollisions.BottomCollision == true)
 				BottomCollided?.Invoke();
 		}
 		
@@ -129,7 +166,7 @@ namespace CodeBase.Collisions
 		private void DrawRays()
 		{
 			if (Application.isPlaying == false)
-				UpdateRaysPosition();
+				CalculateRaysPosition();
 				
 			Gizmos.color = Color.red;
 			List<RayData> rays = new List<RayData>()

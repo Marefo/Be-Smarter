@@ -1,7 +1,7 @@
 using System;
-using CodeBase.Hero;
 using CodeBase.Logic;
 using CodeBase.Services;
+using CodeBase.Units.Hero;
 using UnityEngine;
 using Zenject;
 

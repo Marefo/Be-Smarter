@@ -11,7 +11,7 @@ namespace CodeBase.Infrastructure
 			return StartCoroutine(CallWithDelayCoroutine(action, delay));
 		}
 
-		private IEnumerator CallWithDelayCoroutine(Action action, float delay)
+		public IEnumerator CallWithDelayCoroutine(Action action, float delay)
 		{
 			yield return new WaitForSeconds(delay);
 			action();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using CodeBase.Hero;
 using CodeBase.Logic;
 using UnityEngine;
 
@@ -27,7 +26,7 @@ namespace CodeBase.DeathRay
 
 		private void ChangeState(Collider2D obj)
 		{
-			if (obj.TryGetComponent(out HeroMovement heroMove))
+			if (obj.TryGetComponent(out IMortal mortal))
 				StateChanged?.Invoke();
 		}
 	}

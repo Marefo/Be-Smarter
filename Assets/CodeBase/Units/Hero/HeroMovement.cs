@@ -1,31 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CodeBase.Collisions;
+﻿using CodeBase.Collisions;
 using CodeBase.Infrastructure;
 using CodeBase.Services;
+using DG.Tweening;
 using UnityEngine;
-using Vertx.Debugging;
 using Zenject;
 
-namespace CodeBase.Hero
+namespace CodeBase.Units.Hero
 {
 	[RequireComponent(typeof(CollisionDetector), typeof(BoxCollider2D), typeof(SpriteRenderer))]
+	[RequireComponent(typeof(UnitAnimator))]
 	public class HeroMovement : MonoBehaviour
 	{
-		[SerializeField] private float _maxMoveSpeed = 3;
-		[SerializeField] private float _acceleration = 90;
-		[SerializeField] private float _deAcceleration = 60;
-		[Space(10)]
-		[SerializeField] private float _climbAssistHeight = 0.01f;
-		[Space(10)]
-		[SerializeField] private float _minFallSpeed = 2;
-		[SerializeField] private float _maxFallSpeed = 4;
-		[Space(10)]
-		[SerializeField] private float _jumpHeight = 3;
-		[SerializeField] private float _apexThreshold = 2;
-		[SerializeField] private float _apexAdditionalSpeed = 1.5f;
-		[SerializeField] private float _bufferedJumpTime = 0.05f;
+		[SerializeField] private HeroMoveSettings _settings;
 		
 		private readonly int _closestPointFindAttempts = 5;
 		
@@ -33,7 +19,8 @@ namespace CodeBase.Hero
 		private SpriteRenderer _sprite;
 		private Vector2 _colliderBottomCenter;
 		private CollisionDetector _collisionDetector;
-		private CoroutineRunner _coroutineRunner;
+		private LevelPreparer _levelPreparer;
+		private UnitAnimator _animator;
 		private float _currentHorizontalSpeed;
 		private float _currentVerticalSpeed;
 		private float _lastMoveDirection;
@@ -42,23 +29,23 @@ namespace CodeBase.Hero
 		private Vector3 _lastPosition;
 		private float _fallSpeed;
 		private float _lastJumpBtnPressTime;
-		private bool _active = false;
+		private bool _inputDisabled = false;
+		private bool _isJumping = false;
 
 		[Inject]
-		private void Construct(IInputService inputService, CoroutineRunner coroutineRunner)
+		private void Construct(IInputService inputService, LevelPreparer levelPreparer)
 		{
 			_inputService = inputService;
-			_coroutineRunner = coroutineRunner;
+			_levelPreparer = levelPreparer;
 			_sprite = GetComponent<SpriteRenderer>();
 			_collisionDetector = GetComponent<CollisionDetector>();
+			_animator = GetComponent<UnitAnimator>();
 		}
 		
 		private void Start()
 		{
 			_inputService.JumpBtnPressed += OnJumpBtnPress;
 			_collisionDetector.BottomCollided += OnBottomCollide;
-
-			Activate();
 		}
 
 		private void OnDestroy()
@@ -69,11 +56,16 @@ namespace CodeBase.Hero
 
 		private void Update()
 		{
-			if(_active == false) return;
+			_collisionDetector.CalculateRaysPosition();
+			_collisionDetector.UpdateBoxCollisions();
+			_collisionDetector.UpdateCollisionEvents();
+			
+			if(_levelPreparer.Prepared == false) return;
 			
 			CalculateVelocity();
 			FlipSprite();
 			Walk();
+			Tilt();
 			CalculateJumpApex();
 			CalculateGravity();
 			CalculateJump();
@@ -81,6 +73,8 @@ namespace CodeBase.Hero
 
 		private void OnBottomCollide()
 		{
+			_animator.PlayLanding();
+			
 			if (HasBufferedJump())
 				Jump();
 		}
@@ -91,8 +85,6 @@ namespace CodeBase.Hero
 			Jump();
 		}
 
-		private void Activate() => _coroutineRunner.CallWithDelay(() => _active = true, 0.5f);
-		
 		private void CalculateVelocity()
 		{
 			if (_lastPosition != Vector3.zero)
@@ -109,11 +101,21 @@ namespace CodeBase.Hero
 				_sprite.flipX = true;
 		}
 
+		private void Tilt()
+		{
+			Vector3 targetRotVector = new Vector3(0, 0, 
+				Mathf.Lerp(-_settings.MaxTilt, _settings.MaxTilt, Mathf.InverseLerp(-1, 1, _inputService.AxisX)));
+			transform.rotation = Quaternion.RotateTowards(
+				transform.rotation, Quaternion.Euler(targetRotVector), _settings.TiltSpeed * Time.deltaTime);
+		}
+
 		private void Walk()
 		{
 			if (CanMove() == false)
 			{
-				if(TryClimbAssist() == false)
+				_animator.PlayWalk(0);
+				
+				if (TryClimbAssist() == false)
 					MoveToClosestAvailablePoint();
 				
 				return;
@@ -122,17 +124,20 @@ namespace CodeBase.Hero
 			if (_inputService.AxisX != 0)
 			{
 				ResetSpeedForOppositeDirection();
-
-				float apexSpeed = Mathf.Sign(_inputService.AxisX) * _apexAdditionalSpeed * _apexPoint;
 				
-				_currentHorizontalSpeed += _inputService.AxisX * _acceleration * Time.deltaTime;
-				_currentHorizontalSpeed = Mathf.Clamp(_currentHorizontalSpeed, -_maxMoveSpeed, _maxMoveSpeed);
+				float apexSpeed = Mathf.Sign(_inputService.AxisX) * _settings.ApexAdditionalSpeed * _apexPoint;
+
+				_currentHorizontalSpeed += _inputService.AxisX * _settings.Acceleration * Time.deltaTime;
+				_currentHorizontalSpeed = Mathf.Clamp(_currentHorizontalSpeed, -_settings.MaxMoveSpeed, _settings.MaxMoveSpeed);
 				_currentHorizontalSpeed += apexSpeed * Time.deltaTime;
 			}
 			else
-				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _deAcceleration * Time.deltaTime);
+				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _settings.DeAcceleration * Time.deltaTime);
 
 			transform.position += Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
+
+			float animationSpeed = Mathf.Clamp(Mathf.Abs(_currentHorizontalSpeed), 0, 1.5f);
+			_animator.PlayWalk(animationSpeed);
 		}
 
 		private void ResetSpeedForOppositeDirection()
@@ -148,10 +153,11 @@ namespace CodeBase.Hero
 
 		private bool CanMove()
 		{
-			return _inputService.AxisX > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
+			return _inputDisabled == false && 
+			       (_inputService.AxisX > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
 			       _inputService.AxisX < 0 && _collisionDetector.BoxCollisions.LeftCollision == false ||
-			       _lastMoveDirection > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
-			       _lastMoveDirection < 0 && _collisionDetector.BoxCollisions.LeftCollision == false;
+			       _inputService.AxisX == 0 && _lastMoveDirection > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
+			       _inputService.AxisX == 0 && _lastMoveDirection < 0 && _collisionDetector.BoxCollisions.LeftCollision == false);
 	}
 
 		private void MoveToClosestAvailablePoint()
@@ -183,30 +189,22 @@ namespace CodeBase.Hero
 				collided = _collisionDetector.GetFirstLeftSideCollision();
 
 			if(collided == null) return false;
-					
-			bool canClimbAssist = _collisionDetector.Bounds.min.y + _climbAssistHeight >= collided.bounds.max.y;
-			if (canClimbAssist)
+
+			Vector2 climbPoint = _collisionDetector.GetClimbPointToCollider(collided, _settings.ClimbAssistHeight);
+			bool canClimbAssist = climbPoint != Vector2.zero;
+
+			if (canClimbAssist && _inputDisabled == false)
 			{
-				float collidedMinX = collided.bounds.min.x;
-				float collidedMaxX = collided.bounds.max.x;
-				
-				float closestPositionX =
-					Mathf.Abs(transform.position.x - collidedMinX) <
-					Mathf.Abs(transform.position.x - collidedMaxX)
-						? collidedMinX
-						: collidedMaxX;
-
-				float climbedPositionY = transform.position.y + collided.bounds.max.y + _collisionDetector.VerticalRaysLength - _collisionDetector.Bounds.min.y;
-				
-				transform.position = new Vector2(closestPositionX, climbedPositionY);
+				_inputDisabled = true;
+				transform.DOMove(climbPoint, _settings.ClimbDuration).OnComplete(() => _inputDisabled = false);
 			}
-
+				
 			return canClimbAssist;
 		}
 
 		private void CalculateGravity() {
 			if (_collisionDetector.BoxCollisions.BottomCollision == false)
-				_currentVerticalSpeed = Mathf.Clamp(_currentVerticalSpeed - _fallSpeed * Time.deltaTime, -_maxFallSpeed, float.MaxValue);
+				_currentVerticalSpeed = Mathf.Clamp(_currentVerticalSpeed - _fallSpeed * Time.deltaTime, -_settings.MaxFallSpeed, float.MaxValue);
 			else if(_currentVerticalSpeed < 0)
 				_currentVerticalSpeed = 0;
 		}
@@ -214,8 +212,8 @@ namespace CodeBase.Hero
 		private void CalculateJumpApex() {
 			if (_collisionDetector.BoxCollisions.BottomCollision == false)
 			{
-				_apexPoint = Mathf.InverseLerp(_apexThreshold, 0, Mathf.Abs(_velocity.y));
-				_fallSpeed = Mathf.Lerp(_minFallSpeed, _maxFallSpeed, _apexPoint);
+				_apexPoint = Mathf.InverseLerp(_settings.ApexThreshold, 0, Mathf.Abs(_velocity.y));
+				_fallSpeed = Mathf.Lerp(_settings.MinFallSpeed, _settings.MaxFallSpeed, _apexPoint);
 			}
 			else
 				_apexPoint = 0;
@@ -229,13 +227,14 @@ namespace CodeBase.Hero
 			transform.position += Vector3.up * _currentVerticalSpeed * Time.deltaTime;
 		}
 
-		private bool HasBufferedJump() => _lastJumpBtnPressTime + _bufferedJumpTime > Time.time;
+		private bool HasBufferedJump() => _lastJumpBtnPressTime + _settings.BufferedJumpTime > Time.time;
 
 		private void Jump()
 		{
 			if (_collisionDetector.BoxCollisions.BottomCollision == false) return;
 
-			_currentVerticalSpeed = _jumpHeight;
+			_currentVerticalSpeed = _settings.JumpHeight;
+			_animator.PlayJump();
 		}
 	}
 }

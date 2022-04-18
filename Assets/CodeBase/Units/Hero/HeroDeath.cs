@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using CodeBase.Logic;
+using UnityEngine;
 
-namespace CodeBase.Hero
+namespace CodeBase.Units.Hero
 {
-	public class HeroDeath : MonoBehaviour
+	public class HeroDeath : MonoBehaviour, IMortal
 	{
 		[SerializeField] private ParticleSystem _vfxPrefab;
 		[SerializeField] private SpriteRenderer _spriteRenderer;
@@ -14,6 +15,8 @@ namespace CodeBase.Hero
 
 			HideSprite();
 			SpawnVfx();
+			
+			enabled = false;
 		}
 
 		private void SpawnVfx()
