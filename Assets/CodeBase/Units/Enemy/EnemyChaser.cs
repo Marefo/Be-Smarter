@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using CodeBase.Collisions;
 using CodeBase.Infrastructure;
@@ -25,7 +26,6 @@ namespace CodeBase.Units.Enemy
 		[Space(10)]
 		[SerializeField] private float _fallSpeed = 4;
 		[Space(10)]
-		[SerializeField] private float _jumpSpeed;
 		[SerializeField, Range(1, 100)] private float _jumpPercentLength = 60f;
 		[SerializeField] private float _jumpHeight = 0.5f;
 		[SerializeField] private float _jumpDuration = 1;
@@ -35,11 +35,9 @@ namespace CodeBase.Units.Enemy
 		
 		private int _moveDirection => GetMoveDirection();
 		
-		private Transform _hero;
 		private SpriteRenderer _sprite;
 		private CollisionDetector _collisionDetector;
-		private CoroutineRunner _coroutineRunner;
-		private LevelPreparer _levelPreparer;
+		private Transform _hero;
 		private float _currentHorizontalSpeed = 0;
 		private bool _canChase = false;
 		private float _currentVerticalSpeed;
@@ -51,18 +49,14 @@ namespace CodeBase.Units.Enemy
 		private Sequence _doJump;
 		private UnitAnimator _animator;
 
-		[Inject]
-		private void Construct(HeroMovement heroMovement, CoroutineRunner coroutineRunner, LevelPreparer levelPreparer)
+		private void Awake()
 		{
-			_hero = heroMovement.transform;
-			_coroutineRunner = coroutineRunner;
-			_levelPreparer = levelPreparer;
 			_sprite = GetComponent<SpriteRenderer>();
 			_collisionDetector = GetComponent<CollisionDetector>();
 			_animator = GetComponent<UnitAnimator>();
 		}
 
-		private void Start()
+		private void OnEnable()
 		{
 			_agroZone.Entered += OnAgroZoneEnter;
 			_agroZone.Canceled += OnAgroZoneCancel;
@@ -70,7 +64,7 @@ namespace CodeBase.Units.Enemy
 			_collisionDetector.BottomCollided += OnBottomCollision;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_agroZone.Entered -= OnAgroZoneEnter;
 			_agroZone.Canceled -= OnAgroZoneCancel;
@@ -84,16 +78,27 @@ namespace CodeBase.Units.Enemy
 			_collisionDetector.UpdateBoxCollisions();
 			_collisionDetector.UpdateCollisionEvents();
 			
-			if(_levelPreparer.Prepared == false) return;
-
-			Chase();
+			if(_hero != null)
+				Chase();
+			
 			Tilt();
 			CalculateGravity();
 		}
 
+		public override void Disable()
+		{
+			StopJump();
+			_inputDisabled = true;
+			_currentVerticalSpeed = 0;
+			_currentHorizontalSpeed = 0;
+			_animator.PlayIdle();
+		}
+
 		private void OnAgroZoneEnter(Collider2D obj)
 		{
-			if (!obj.TryGetComponent(out HeroMovement heroMovement)) return;
+			if (obj.TryGetComponent(out HeroMovement heroMovement) == false) return;
+
+			_hero = heroMovement.transform;
 			
 			if (BlockedByCube() == false)
 				Jump();
@@ -161,7 +166,7 @@ namespace CodeBase.Units.Enemy
 			
 			transform.position += Vector3.up * _currentVerticalSpeed * Time.deltaTime;
 		}
-		
+
 		private void Chase()
 		{
 			if (MovingToOppositeDirection())
@@ -191,7 +196,7 @@ namespace CodeBase.Units.Enemy
 			float animationSpeed = Mathf.Clamp(Mathf.Abs(_currentHorizontalSpeed), 0, 1.5f);
 			_animator.PlayWalk(animationSpeed);
 		}
-		
+
 		private void Tilt()
 		{
 			Vector3 targetRotVector = new Vector3(0, 0, 
@@ -199,7 +204,7 @@ namespace CodeBase.Units.Enemy
 			transform.rotation = Quaternion.RotateTowards(
 				transform.rotation, Quaternion.Euler(targetRotVector), _tiltSpeed * Time.deltaTime);
 		}
-		
+
 		private bool MovingToOppositeDirection()
 		{
 			if (_lastMoveDirection == 0)
@@ -255,14 +260,14 @@ namespace CodeBase.Units.Enemy
 
 			return _moveDirection > 0 && rightSideCubes.Count > 0 || _moveDirection < 0 && leftSideCubes.Count > 0;
 		}
-		
+
 		private bool CanMove()
 		{
 			return _inputDisabled == false &&
 			       (_moveDirection > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
 			       _moveDirection < 0 && _collisionDetector.BoxCollisions.LeftCollision == false);
 		}
-		
+
 		private int GetMoveDirection() => _hero.position.x > transform.position.x ? 1 : -1;
 	}
 }

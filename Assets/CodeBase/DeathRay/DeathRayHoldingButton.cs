@@ -20,15 +20,18 @@ namespace CodeBase.DeathRay
 		
 		private readonly int _isPressedHash = Animator.StringToHash("IsPressed");
 
-		private void Start()
+		private void Awake()
 		{
 			_animator = GetComponent<Animator>();
-			
+		}
+
+		private void OnEnable()
+		{
 			_activeArea.Entered += OnEnter;
 			_activeArea.Canceled += OnCancel;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_activeArea.Entered -= OnEnter;
 			_activeArea.Canceled -= OnCancel;

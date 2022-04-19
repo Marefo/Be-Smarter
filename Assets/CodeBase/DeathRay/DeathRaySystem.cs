@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace CodeBase.DeathRay
@@ -9,16 +10,17 @@ namespace CodeBase.DeathRay
 		[Space(10)]
 		[SerializeField] private bool _startActive = true;
 
-		private void Start()
+		private void OnEnable()
 		{
 			_deathRayButton.StateChanged += OnStateChange;
-			Init();
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_deathRayButton.StateChanged -= OnStateChange;
 		}
+
+		private void Start() => Init();
 
 		private void Init()
 		{

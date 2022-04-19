@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace CodeBase.Units.Hero
+namespace CodeBase.StaticData
 {
 	[CreateAssetMenu(fileName = "HeroMoveSettings", menuName = "StaticData/HeroMoveSettings")]
 	public class HeroMoveSettings : ScriptableObject

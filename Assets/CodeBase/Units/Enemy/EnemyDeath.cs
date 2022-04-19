@@ -1,21 +1,24 @@
-﻿using CodeBase.Logic;
+﻿using System;
+using CodeBase.Logic;
 using UnityEngine;
 
 namespace CodeBase.Units.Enemy
 {
-	public class EnemyDeath : MonoBehaviour, IMortal
+	public class EnemyDeath : UnitDeath
 	{
-		[SerializeField] private ParticleSystem _vfxPrefab;
+		public override event Action<UnitDeath> Died;
 		
-		public void Die()
+		[SerializeField] private ParticleSystem _vfxPrefab;
+
+		public override void Die()
 		{
 			SpawnVfx();
+			Died?.Invoke(this);
 			Destroy(gameObject);
 		}
-		
-		private void SpawnVfx()
-		{
-			Instantiate(_vfxPrefab, transform.position, Quaternion.identity);
-		}
+
+		public override void Immobilize() => Died?.Invoke(this);
+
+		private void SpawnVfx() => Instantiate(_vfxPrefab, transform.position, Quaternion.identity);
 	}
 }

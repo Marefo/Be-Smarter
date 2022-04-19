@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace CodeBase.Logic
+namespace CodeBase.StaticData
 {
 	[CreateAssetMenu(fileName = "PushSettings", menuName = "StaticData/PushSettings")]
 	public class PushSettings : ScriptableObject

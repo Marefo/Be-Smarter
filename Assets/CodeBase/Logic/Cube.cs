@@ -1,4 +1,6 @@
-﻿using CodeBase.Units.Hero;
+﻿using System;
+using CodeBase.StaticData;
+using CodeBase.Units.Hero;
 using DG.Tweening;
 using UnityEngine;
 
@@ -18,20 +20,32 @@ namespace CodeBase.Logic
 		private HeroMovement _heroMovement;
 		private bool _pickedUp = false;
 		private int _defaultLayer;
+		private Sequence _push;
 
-		private void Start()
+		private void Awake()
 		{
 			_interactable = GetComponent<Interactable>();
 			_rigidbody = GetComponent<Rigidbody2D>();
-
-			_defaultLayer = gameObject.layer;
-			
+		}
+		
+		private void OnEnable()
+		{
 			_interactable.Interacted += OnInteract;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
-			_interactable.Interacted -= OnInteract;
+			_interactable.Interacted -= OnInteract;	
+		}
+
+		private void Start()
+		{
+			_defaultLayer = gameObject.layer;
+		}
+
+		private void OnCollisionEnter2D(Collision2D col)
+		{
+			StopPush();
 		}
 
 		private void OnInteract(HeroMovement heroMovement)
@@ -80,7 +94,9 @@ namespace CodeBase.Logic
 			
 			Vector3 currentPosition = transform.position;
 			Vector3 targetPosition = currentPosition + Vector3.right * _heroMovement.MoveDirection * pushDistance;
-			transform.DOJump(targetPosition, pushHeight, 1, pushDuration);
+			_push = transform.DOJump(targetPosition, pushHeight, 1, pushDuration);
 		}
+
+		private void StopPush() => _push?.Kill();
 	}
 }

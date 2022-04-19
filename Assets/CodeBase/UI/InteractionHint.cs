@@ -11,24 +11,24 @@ namespace CodeBase.UI
 	{
 		[SerializeField] private GameObject _visualHint;
 		[SerializeField] private Interactable _interactable;
-		
-		private void Start()
+
+		private void OnEnable()
 		{
-			Hide();
-			
 			_interactable.InteractionEnabled += Show;
 			_interactable.InteractionDisabled += Hide;
 			_interactable.InteractionStarted += Hide;
 			_interactable.InteractionFinished += Show;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_interactable.InteractionEnabled -= Show;
 			_interactable.InteractionDisabled -= Hide;
 			_interactable.InteractionStarted -= Hide;
 			_interactable.InteractionFinished -= Show;
 		}
+
+		private void Start() => Hide();
 
 		private void Show()
 		{

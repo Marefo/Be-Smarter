@@ -12,11 +12,11 @@ GameObject:
   - component: {fileID: 725501259213778868}
   - component: {fileID: 725501259213778871}
   - component: {fileID: 2258483262445787697}
-  - component: {fileID: 315160286871982140}
   - component: {fileID: 5975674454455046862}
   - component: {fileID: 725501259213778864}
   - component: {fileID: 725501259213778865}
   - component: {fileID: 7924521317074088154}
+  - component: {fileID: 2608159260053512734}
   m_Layer: 8
   m_Name: Hero
   m_TagString: Untagged
@@ -105,18 +105,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!114 &315160286871982140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 725501259213778874}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea083e37584a4e318f272fd1b09ae0ec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5975674454455046862
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,6 +183,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animator: {fileID: 725501259213778868}
+--- !u!114 &2608159260053512734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 725501259213778874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03e02c6b951b4718b389f63973e36b28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &725501259842070160
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,7 +213,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &725501259842070124
 Transform:
   m_ObjectHideFlags: 0
@@ -380,8 +380,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -346283705
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: 8766231738516977793, guid: df7fff26e3eecc046be1a8706d5e87d5,
     type: 3}
@@ -515,7 +515,7 @@ MonoBehaviour:
   m_BindingMode: 1
   m_FollowOffset: {x: 0, y: 0, z: -10}
   m_XDamping: 0.2
-  m_YDamping: 0.2
+  m_YDamping: 0.5
   m_ZDamping: 0
   m_AngularDampingMode: 0
   m_PitchDamping: 0

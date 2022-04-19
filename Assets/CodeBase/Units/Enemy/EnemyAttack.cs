@@ -8,12 +8,12 @@ namespace CodeBase.Units.Enemy
 	{
 		[SerializeField] private TriggerListener _killZone;
 
-		private void Start()
+		private void OnEnable()
 		{
 			_killZone.Entered += OnKillZoneEnter;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_killZone.Entered -= OnKillZoneEnter;
 		}

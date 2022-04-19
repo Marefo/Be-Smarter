@@ -31,10 +31,7 @@ namespace CodeBase.Collisions
 		private Bounds _unitsBoundsInWorld;
 		private BoxRays _boxRays;
 
-		private void Start()
-		{
-			InitBoxCollisions();
-		}
+		private void Start() => InitBoxCollisions();
 
 		private void OnDrawGizmos() {
 			DrawBounds();

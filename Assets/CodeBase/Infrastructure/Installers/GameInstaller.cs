@@ -13,9 +13,10 @@ namespace CodeBase.Infrastructure.Installers
 
 		public override void InstallBindings()
 		{
+			Container.BindInterfacesAndSelfTo<GameStatus>().AsSingle();
 			Container.BindInterfacesTo<GameReStarter>().AsSingle().NonLazy();
-			Container.BindInstance(_levelPreparer).AsSingle();
 			BindHero();
+			Container.BindInstance(_levelPreparer).AsSingle();
 		}
 
 		private void BindHero()

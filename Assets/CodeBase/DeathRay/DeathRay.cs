@@ -1,4 +1,5 @@
 ﻿using CodeBase.Logic;
+using CodeBase.Units;
 using DG.Tweening;
 using UnityEngine;
 
@@ -20,8 +21,8 @@ namespace CodeBase.DeathRay
 
 		private void OnTriggerEnter2D(Collider2D col)
 		{
-			if(col.TryGetComponent(out IMortal mortal))
-				mortal.Die();
+			if(col.TryGetComponent(out UnitDeath unitDeath))
+				unitDeath.Die();
 		}
 
 		public void Enable()

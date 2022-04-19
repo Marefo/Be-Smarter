@@ -21,9 +21,6 @@ namespace CodeBase.Services
 		{
 			_input.Enable();
 			SubscribeEvents();
-
-			Debug.Log("Input service initialized");
-			Debug.Log("====");
 		}
 
 		public void Dispose()

@@ -17,15 +17,18 @@ namespace CodeBase.DeathRay
 		
 		private readonly int _pressHash = Animator.StringToHash("Press");
 
-		private void Start()
+		private void Awake()
 		{
 			_interactable = GetComponent<Interactable>();
 			_animator = GetComponent<Animator>();
+		}
 
+		private void OnEnable()
+		{
 			_interactable.Interacted += OnInteract;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_interactable.Interacted -= OnInteract;
 		}

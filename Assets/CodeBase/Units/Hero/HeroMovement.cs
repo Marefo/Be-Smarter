@@ -1,7 +1,9 @@
-﻿using CodeBase.Collisions;
+﻿using System;
+using CodeBase.Collisions;
 using CodeBase.Infrastructure;
 using CodeBase.Logic;
 using CodeBase.Services;
+using CodeBase.StaticData;
 using DG.Tweening;
 using UnityEngine;
 using Zenject;
@@ -10,20 +12,19 @@ namespace CodeBase.Units.Hero
 {
 	[RequireComponent(typeof(CollisionDetector), typeof(BoxCollider2D))]
 	[RequireComponent(typeof(UnitAnimator))]
-	public class HeroMovement : MonoBehaviour, IHoldingBtnActivator
+	public class HeroMovement : UnitMovement, IHoldingBtnActivator
 	{
 		public float MoveDirection => transform.localScale.x;
 		public bool IsWalking => Mathf.Abs(_currentHorizontalSpeed) > 0;
 		public float SpeedPercent => Mathf.InverseLerp(0, _settings.MaxMoveSpeed, Mathf.Abs(_currentHorizontalSpeed));
 		
 		[SerializeField] private HeroMoveSettings _settings;
-		
-		private readonly int _closestPointFindAttempts = 10;
-		
+
+		private const int ClosestPointFindAttempts = 10;
+
 		private IInputService _inputService;
 		private Vector2 _colliderBottomCenter;
 		private CollisionDetector _collisionDetector;
-		private LevelPreparer _levelPreparer;
 		private UnitAnimator _animator;
 		private float _currentHorizontalSpeed;
 		private float _currentVerticalSpeed;
@@ -36,21 +37,20 @@ namespace CodeBase.Units.Hero
 		private bool _inputDisabled = false;
 
 		[Inject]
-		private void Construct(IInputService inputService, LevelPreparer levelPreparer)
+		private void Construct(IInputService inputService)
 		{
 			_inputService = inputService;
-			_levelPreparer = levelPreparer;
 			_collisionDetector = GetComponent<CollisionDetector>();
 			_animator = GetComponent<UnitAnimator>();
 		}
 		
-		private void Start()
+		private void OnEnable()
 		{
 			_inputService.JumpBtnPressed += OnJumpBtnPress;
 			_collisionDetector.BottomCollided += OnBottomCollide;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_inputService.JumpBtnPressed -= OnJumpBtnPress;
 			_collisionDetector.BottomCollided -= OnBottomCollide;
@@ -61,9 +61,7 @@ namespace CodeBase.Units.Hero
 			_collisionDetector.CalculateRaysPosition();
 			_collisionDetector.UpdateBoxCollisions();
 			_collisionDetector.UpdateCollisionEvents();
-			
-			if(_levelPreparer.Prepared == false) return;
-			
+
 			CalculateVelocity();
 			FlipSprite();
 			Walk();
@@ -71,6 +69,14 @@ namespace CodeBase.Units.Hero
 			CalculateJumpApex();
 			CalculateGravity();
 			CalculateJump();
+		}
+
+		public override void Disable()
+		{
+			_inputDisabled = true;
+			_currentHorizontalSpeed = 0;
+			_currentVerticalSpeed = 0;
+			_animator.PlayIdle();
 		}
 
 		private void OnBottomCollide()
@@ -168,9 +174,9 @@ namespace CodeBase.Units.Hero
 			Vector3 move = Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
 			Vector3 furthestPoint = currentPosition + move;
 
-			for (int i = 1; i < _closestPointFindAttempts; i++)
+			for (int i = 1; i < ClosestPointFindAttempts; i++)
 			{
-				float t = (float) i / _closestPointFindAttempts;
+				float t = (float) i / ClosestPointFindAttempts;
 				Vector2 currentTryPosition = Vector2.Lerp(currentPosition, furthestPoint, t);
 
 				if (_collisionDetector.CanMoveToPoint(currentTryPosition))

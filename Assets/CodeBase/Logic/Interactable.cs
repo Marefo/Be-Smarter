@@ -24,14 +24,14 @@ namespace CodeBase.Logic
 		[Inject]
 		private void Construct(IInputService inputService) => _inputService = inputService;
 
-		private void Start()
+		private void OnEnable()
 		{
 			_interactionZone.Entered += OnInteractionZoneEnter;
 			_interactionZone.Canceled += OnInteractionZoneCancel;
 			_inputService.InteractBtnPressed += OnInteractBtnPress;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
 			_interactionZone.Entered -= OnInteractionZoneEnter;
 			_interactionZone.Canceled -= OnInteractionZoneCancel;
