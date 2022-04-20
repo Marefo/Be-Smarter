@@ -13,7 +13,7 @@ namespace CodeBase.DeathRay
 		private Collider2D _collider;
 		private SpriteRenderer _spriteRenderer;
 
-		private void Start()
+		private void Awake()
 		{
 			_collider = GetComponent<Collider2D>();
 			_spriteRenderer = GetComponent<SpriteRenderer>();

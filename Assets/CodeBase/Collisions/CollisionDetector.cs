@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeBase.Extensions;
 using CodeBase.Logic;
+using CodeBase.StaticData;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -12,26 +13,15 @@ namespace CodeBase.Collisions
 	{
 		public event Action Collided;
 		public event Action BottomCollided;
-		
-		public BoxCollisions BoxCollisions { get; private set; }
-		public BoxCollisions LastFrameBoxCollisions { get; private set; }
-		public Bounds Bounds => _unitBounds;
-		public float VerticalRaysLength => _verticalRaysLength;
-		
-		[SerializeField] private ContactFilter2D _physicalObjFilter;
-		[SerializeField] private LayerMask _physicalObjLayer;
-		[Space(10)]
-		[SerializeField] private Bounds _unitBounds;
-		[SerializeField] private int _sideRaysCount = 3;
-		[SerializeField] private float _verticalRaysLength = 0.1f;
-		[SerializeField] private float _horizontalRaysLength = 0.1f;
-		[SerializeField] private float _raysInnerOffset = 0.01f;
-		[SerializeField, Range(0.01f, 0.1f)] private float _raysShift = 0.1f;
 
-		private Bounds _unitsBoundsInWorld;
+		public BoxCollisions BoxCollisions { get; private set; } = new BoxCollisions();
+		public BoxCollisions LastFrameBoxCollisions { get; private set; } = new BoxCollisions();
+		public Bounds Bounds => _settings.UnitBounds;
+
+		[SerializeField] private CollisionDetectorSettings _settings;
+
+		private Bounds _unitsBoundsInWorld = new Bounds();
 		private BoxRays _boxRays;
-
-		private void Start() => InitBoxCollisions();
 
 		private void OnDrawGizmos() {
 			DrawBounds();
@@ -43,7 +33,7 @@ namespace CodeBase.Collisions
 		public List<Collider2D> GetCollisionsInPoint(Vector3 point)
 		{
 			List<Collider2D> overlapped = new List<Collider2D>();
-			Physics2D.OverlapBox(point, _unitBounds.size, 0, _physicalObjFilter, overlapped);
+			Physics2D.OverlapBox(point, _settings.UnitBounds.size, 0, _settings.PhysicalObjFilter, overlapped);
 
 			return overlapped.Where(obj => obj.gameObject != gameObject).ToList();
 		}
@@ -66,35 +56,35 @@ namespace CodeBase.Collisions
 					? collidedMinX
 					: collidedMaxX;
 
-			float climbedPositionY = transform.position.y + colliderForClimb.bounds.max.y + VerticalRaysLength - Bounds.min.y;
+			float climbedPositionY = transform.position.y + colliderForClimb.bounds.max.y + _settings.VerticalRaysLength - Bounds.min.y;
 		
 			return new Vector2(closestPositionX, climbedPositionY);
 		}
 
 		public void CalculateRaysPosition()
 		{
-			_unitsBoundsInWorld = _unitBounds;
+			_unitsBoundsInWorld = _settings.UnitBounds;
 			_unitsBoundsInWorld.center = transform.position;
 
 			RayData topRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.min.x + _raysShift, _unitsBoundsInWorld.max.y - _raysInnerOffset),
-				new Vector2(_unitsBoundsInWorld.max.x - _raysShift, _unitsBoundsInWorld.max.y - _raysInnerOffset),
-				Vector2.up, _verticalRaysLength
+				new Vector2(_unitsBoundsInWorld.min.x + _settings.RaysShift, _unitsBoundsInWorld.max.y - _settings.RaysInnerOffset),
+				new Vector2(_unitsBoundsInWorld.max.x - _settings.RaysShift, _unitsBoundsInWorld.max.y - _settings.RaysInnerOffset),
+				Vector2.up, _settings.VerticalRaysLength
 			);
 			RayData bottomRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.min.x + _raysShift, _unitsBoundsInWorld.min.y + _raysInnerOffset),
-				new Vector2(_unitsBoundsInWorld.max.x - _raysShift, _unitsBoundsInWorld.min.y + _raysInnerOffset),
-				Vector2.down, _verticalRaysLength
+				new Vector2(_unitsBoundsInWorld.min.x + _settings.RaysShift, _unitsBoundsInWorld.min.y + _settings.RaysInnerOffset),
+				new Vector2(_unitsBoundsInWorld.max.x - _settings.RaysShift, _unitsBoundsInWorld.min.y + _settings.RaysInnerOffset),
+				Vector2.down, _settings.VerticalRaysLength
 			);
 			RayData leftRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.min.x + _raysInnerOffset, _unitsBoundsInWorld.min.y + _raysShift),
-				new Vector2(_unitsBoundsInWorld.min.x + _raysInnerOffset, _unitsBoundsInWorld.max.y - _raysShift),
-				Vector2.left, _horizontalRaysLength
+				new Vector2(_unitsBoundsInWorld.min.x + _settings.RaysInnerOffset, _unitsBoundsInWorld.min.y + _settings.RaysShift),
+				new Vector2(_unitsBoundsInWorld.min.x + _settings.RaysInnerOffset, _unitsBoundsInWorld.max.y - _settings.RaysShift),
+				Vector2.left, _settings.HorizontalRaysLength
 			);
 			RayData rightRay = new RayData(
-				new Vector2(_unitsBoundsInWorld.max.x - _raysInnerOffset, _unitsBoundsInWorld.min.y + _raysShift),
-				new Vector2(_unitsBoundsInWorld.max.x - _raysInnerOffset, _unitsBoundsInWorld.max.y - _raysShift),
-				Vector2.right, _horizontalRaysLength
+				new Vector2(_unitsBoundsInWorld.max.x - _settings.RaysInnerOffset, _unitsBoundsInWorld.min.y + _settings.RaysShift),
+				new Vector2(_unitsBoundsInWorld.max.x - _settings.RaysInnerOffset, _unitsBoundsInWorld.max.y - _settings.RaysShift),
+				Vector2.right, _settings.HorizontalRaysLength
 			);
 
 			_boxRays = new BoxRays(topRay, bottomRay, leftRay, rightRay);
@@ -146,11 +136,14 @@ namespace CodeBase.Collisions
 
 			results = rightResults.ToList();
 		}
-		
-		private void InitBoxCollisions()
-		{
-			LastFrameBoxCollisions = new BoxCollisions();
-			BoxCollisions = new BoxCollisions();
+
+		public void TryGetComponentFromBottomCollisions<T>(out List<T> results)
+		{			
+			List<GameObject> collisions = GetCollidedObjects(_boxRays.BottomRays).Where(obj => obj != null).Select(obj => obj.gameObject).ToList();
+
+			GetComponentsFromList(collisions, out List<T> rightResults);
+
+			results = rightResults.ToList();
 		}
 
 		private void GetComponentsFromList<T>(List<GameObject> gameObjects, out List<T> list)
@@ -173,7 +166,7 @@ namespace CodeBase.Collisions
 
 			foreach (Vector2 rayPoint in rays)
 			{
-				RaycastHit2D hit = Physics2D.Raycast(rayPoint, ray.Direction, ray.Length, _physicalObjLayer);
+				RaycastHit2D hit = Physics2D.Raycast(rayPoint, ray.Direction, ray.Length, _settings.PhysicalObjLayer);
 				collided.Add(hit.collider);
 			}
 
@@ -183,12 +176,12 @@ namespace CodeBase.Collisions
 		private bool RaysDetect(RayData ray)
 		{
 			return EvaluateRaysPositions(ray)
-				.Any(point => Physics2D.Raycast(point, ray.Direction, ray.Length, _physicalObjLayer));
+				.Any(point => Physics2D.Raycast(point, ray.Direction, ray.Length, _settings.PhysicalObjLayer));
 		}
 
 		private IEnumerable<Vector2> EvaluateRaysPositions(RayData ray) {
-			for (int i = 0; i < _sideRaysCount; i++) {
-				float sidePercent = (float) i / (_sideRaysCount - 1);
+			for (int i = 0; i < _settings.SideRaysCount; i++) {
+				float sidePercent = (float) i / (_settings.SideRaysCount - 1);
 				yield return Vector2.Lerp(ray.Start, ray.End, sidePercent);
 			}
 		}
@@ -214,7 +207,7 @@ namespace CodeBase.Collisions
 		private void DrawBounds()
 		{
 			Gizmos.color = Color.yellow;
-			Gizmos.DrawWireCube(transform.position + _unitBounds.center, _unitBounds.size);
+			Gizmos.DrawWireCube(transform.position + _settings.UnitBounds.center, _settings.UnitBounds.size);
 		}
 	}
 }

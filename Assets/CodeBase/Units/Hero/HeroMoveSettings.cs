@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
-namespace CodeBase.StaticData
+namespace CodeBase.Units.Hero
 {
-	[CreateAssetMenu(fileName = "HeroMoveSettings", menuName = "StaticData/HeroMoveSettings")]
+	[CreateAssetMenu(fileName = "HeroMoveSettings", menuName = "Settings/HeroMove")]
 	public class HeroMoveSettings : ScriptableObject
 	{
 		public float MaxMoveSpeed;

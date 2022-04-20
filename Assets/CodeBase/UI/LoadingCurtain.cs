@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
@@ -7,31 +8,67 @@ namespace CodeBase.UI
 {
 	public class LoadingCurtain : MonoBehaviour
 	{
+		[SerializeField] private float _fadeInDuration = 0.5f;
+		[SerializeField] private float _fadeOutDuration = 0.5f;
+		[Space(10)]
 		[SerializeField] private CanvasGroup _curtain;
 		[SerializeField] private TextMeshProUGUI _field;
 
 		private string _defaultFieldValue;
 		private Coroutine _loadingEffectCoroutine;
+		private Tweener _fadeIn;
+		private Tweener _fadeOut;
 
 		private void Awake()
 		{
 			DontDestroyOnLoad(this);
-			FastHide();
+			_defaultFieldValue = _field.text;
+			Hide();
 		}
-
-		private void FastHide() => gameObject.SetActive(false);
 
 		public void Show()
 		{
 			gameObject.SetActive(true);
 			_curtain.alpha = 1;
-			
-			PlayLoadingEffect();
 		}
     
-		public void Hide() => StartCoroutine(DoFadeIn());
+		public void Hide()
+		{
+			gameObject.SetActive(false);
+			StopLoadingEffect();
+		}
 
-		private IEnumerator DoFadeIn()
+		public void FadeIn(Action onComplete = null)
+		{
+			_fadeOut?.Kill();
+			gameObject.SetActive(true);
+			_curtain.alpha = 0;
+			
+			PlayLoadingEffect();
+			
+			_fadeIn = _curtain.DOFade(1, _fadeInDuration)
+				.OnComplete(() => onComplete?.Invoke())
+				.OnKill(() => onComplete?.Invoke());
+		}
+
+		public void FadeOut(Action onComplete = null)
+		{
+			_fadeIn?.Kill();
+			_curtain.alpha = 1;
+			
+			_fadeOut = _curtain.DOFade(0, _fadeOutDuration)
+				.OnComplete(() => OnFadeOutComplete(onComplete))
+				.OnKill(() => OnFadeOutComplete(onComplete));
+		}
+
+		private void OnFadeOutComplete(Action callback = null)
+		{
+			callback?.Invoke();
+			StopLoadingEffect();
+			gameObject.SetActive(false);
+		}
+		
+		/*private IEnumerator DoFadeIn()
 		{
 			while (_curtain.alpha > 0)
 			{
@@ -41,13 +78,9 @@ namespace CodeBase.UI
       
 			StopLoadingEffect();
 			gameObject.SetActive(false);
-		}
+		}*/
 
-		private void PlayLoadingEffect()
-		{
-			_defaultFieldValue = _field.text;
-			_loadingEffectCoroutine = StartCoroutine(PlayLoadingEffectCoroutine());
-		}
+		private void PlayLoadingEffect() => _loadingEffectCoroutine = StartCoroutine(PlayLoadingEffectCoroutine());
 
 		private IEnumerator PlayLoadingEffectCoroutine()
 		{
@@ -64,7 +97,9 @@ namespace CodeBase.UI
 
 		private void StopLoadingEffect()
 		{
-			StopCoroutine(_loadingEffectCoroutine);
+			if(_loadingEffectCoroutine != null)
+				StopCoroutine(_loadingEffectCoroutine);
+			
 			_field.text = _defaultFieldValue;
 		}
 	}

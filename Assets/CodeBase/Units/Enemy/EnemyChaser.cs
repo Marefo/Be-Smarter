@@ -1,48 +1,21 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using CodeBase.Collisions;
-using CodeBase.Infrastructure;
-using CodeBase.Logic;
+﻿using CodeBase.Logic;
 using CodeBase.Units.Hero;
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using Zenject;
 
 namespace CodeBase.Units.Enemy
 {
 	public class EnemyChaser : EnemyMovement
 	{
+		[SerializeField] private ChaserSettings _chaserSettings;
+		[Space(10)]
 		[SerializeField] private TriggerListener _agroZone;
-		[SerializeField] private float _confusionTime = 0.5f;
-		[Space(10)]
-		[SerializeField] private float _maxMoveSpeed = 1;
-		[SerializeField] private float _acceleration = 1;
-		[SerializeField] private float _deAcceleration;
-		[Space(10)]
-		[SerializeField] private float _climbDuration = 4;
-		[SerializeField] private float _climbAssistHeight = 0.01f;
-		[Space(10)]
-		[SerializeField] private float _fallSpeed = 4;
-		[Space(10)]
-		[SerializeField, Range(1, 100)] private float _jumpPercentLength = 60f;
-		[SerializeField] private float _jumpHeight = 0.5f;
-		[SerializeField] private float _jumpDuration = 1;
-		[Space(10)]
-		[SerializeField] private float _maxTilt = 1;
-		[SerializeField] private float _tiltSpeed = 1;
-		
-		private int _moveDirection => GetMoveDirection();
-		
-		private SpriteRenderer _sprite;
-		private CollisionDetector _collisionDetector;
+		[SerializeField] private GameObject _landVfx;
+
 		private Transform _hero;
-		private float _currentHorizontalSpeed = 0;
 		private bool _canChase = false;
 		private float _currentVerticalSpeed;
 		private float _lastMoveDirection;
-		private bool _inputDisabled = false;
 		private Coroutine _confusionCoroutine;
 		private bool _isJumping = false;
 		private bool _isJumpKilled = false;
@@ -51,8 +24,7 @@ namespace CodeBase.Units.Enemy
 
 		private void Awake()
 		{
-			_sprite = GetComponent<SpriteRenderer>();
-			_collisionDetector = GetComponent<CollisionDetector>();
+			Init();
 			_animator = GetComponent<UnitAnimator>();
 		}
 
@@ -94,6 +66,8 @@ namespace CodeBase.Units.Enemy
 			_animator.PlayIdle();
 		}
 
+		protected override int GetMoveDirection() => _hero.position.x > transform.position.x ? 1 : -1;
+
 		private void OnAgroZoneEnter(Collider2D obj)
 		{
 			if (obj.TryGetComponent(out HeroMovement heroMovement) == false) return;
@@ -121,6 +95,12 @@ namespace CodeBase.Units.Enemy
 		{
 			if(_isJumpKilled == false) return;
 			_animator.PlayLanding();
+			SpawnLandVfx();
+		}
+
+		private void SpawnLandVfx()
+		{
+			Instantiate(_landVfx, transform.position - Vector3.up * _sprite.bounds.size.y / 2, Quaternion.identity);
 		}
 
 		private void Jump()
@@ -132,9 +112,9 @@ namespace CodeBase.Units.Enemy
 			
 			Vector3 currentPosition = transform.position;
 			currentPosition.y = _hero.position.y;
-			Vector3 jumpTargetPosition = Vector3.Lerp(currentPosition, _hero.position, _jumpPercentLength / 100);
+			Vector3 jumpTargetPosition = Vector3.Lerp(currentPosition, _hero.position, _chaserSettings.JumpPercentLength / 100);
 			
-			_doJump = transform.DOJump(jumpTargetPosition, _jumpHeight, 1, _jumpDuration)
+			_doJump = transform.DOJump(jumpTargetPosition, _chaserSettings.JumpHeight, 1, _chaserSettings.JumpDuration)
 				.OnComplete(OnJumpComplete)
 				.OnKill(() => _isJumpKilled = true);
 			
@@ -160,7 +140,7 @@ namespace CodeBase.Units.Enemy
 
 		private void CalculateGravity() {
 			if (_collisionDetector.BoxCollisions.BottomCollision == false && _isJumping == false)
-				_currentVerticalSpeed -= _fallSpeed * Time.deltaTime;
+				_currentVerticalSpeed -= _enemyMovementSettings.FallSpeed * Time.deltaTime;
 			else if(_currentVerticalSpeed < 0)
 				_currentVerticalSpeed = 0;
 			
@@ -185,24 +165,16 @@ namespace CodeBase.Units.Enemy
 			if (_canChase)
 			{
 				FlipSprite();
-				_currentHorizontalSpeed += _moveDirection * _acceleration * Time.deltaTime;
-				_currentHorizontalSpeed = Mathf.Clamp(_currentHorizontalSpeed, -_maxMoveSpeed, _maxMoveSpeed);
+				_currentHorizontalSpeed += _moveDirection * _enemyMovementSettings.Acceleration * Time.deltaTime;
+				_currentHorizontalSpeed = Mathf.Clamp(_currentHorizontalSpeed, -_enemyMovementSettings.MaxMoveSpeed, _enemyMovementSettings.MaxMoveSpeed);
 			}
 			else
-				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _deAcceleration * Time.deltaTime);
+				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _enemyMovementSettings.DeAcceleration * Time.deltaTime);
 
 			transform.position += Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
 			
 			float animationSpeed = Mathf.Clamp(Mathf.Abs(_currentHorizontalSpeed), 0, 1.5f);
 			_animator.PlayWalk(animationSpeed);
-		}
-
-		private void Tilt()
-		{
-			Vector3 targetRotVector = new Vector3(0, 0, 
-				Mathf.Lerp(-_maxTilt, _maxTilt, Mathf.InverseLerp(-1, 1, Mathf.Clamp(_currentHorizontalSpeed, -1, 1))));
-			transform.rotation = Quaternion.RotateTowards(
-				transform.rotation, Quaternion.Euler(targetRotVector), _tiltSpeed * Time.deltaTime);
 		}
 
 		private bool MovingToOppositeDirection()
@@ -225,49 +197,9 @@ namespace CodeBase.Units.Enemy
 				StopCoroutine(_confusionCoroutine);
 			
 			_inputDisabled = true;
-			_confusionCoroutine = StartCoroutine(_coroutineRunner.CallWithDelayCoroutine(() => _inputDisabled = false, _confusionTime));
+			_confusionCoroutine = StartCoroutine(_coroutineRunner.CallWithDelayCoroutine(() => _inputDisabled = false, _chaserSettings.ConfusionTime));
 			
 			_animator.PlayIdle();
 		}
-
-		private void TryClimbAssist()
-		{
-			Collider2D collided = null;
-
-			if (_moveDirection > 0)
-				collided = _collisionDetector.GetFirstRightSideCollision();
-			else if (_moveDirection < 0)
-				collided = _collisionDetector.GetFirstLeftSideCollision();
-
-			if(collided == null) return;
-
-			Vector2 climbPoint = _collisionDetector.GetClimbPointToCollider(collided, _climbAssistHeight);
-			bool canClimbAssist = climbPoint != Vector2.zero;
-
-			if (canClimbAssist && _inputDisabled == false)
-			{
-				_inputDisabled = true;
-				transform.DOMove(climbPoint, _climbDuration).OnComplete(() => _inputDisabled = false);
-			}
-		}
-
-		private void FlipSprite() => _sprite.flipX = GetMoveDirection() == -1;
-
-		private bool BlockedByCube()
-		{
-			_collisionDetector.TryGetComponentFromLeftCollisions(out List<Cube> leftSideCubes);
-			_collisionDetector.TryGetComponentFromRightCollisions(out List<Cube> rightSideCubes);
-
-			return _moveDirection > 0 && rightSideCubes.Count > 0 || _moveDirection < 0 && leftSideCubes.Count > 0;
-		}
-
-		private bool CanMove()
-		{
-			return _inputDisabled == false &&
-			       (_moveDirection > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
-			       _moveDirection < 0 && _collisionDetector.BoxCollisions.LeftCollision == false);
-		}
-
-		private int GetMoveDirection() => _hero.position.x > transform.position.x ? 1 : -1;
 	}
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeBase.Collisions;
+using CodeBase.DeathRay;
 using CodeBase.Infrastructure;
 using CodeBase.Logic;
 using CodeBase.Services;
@@ -19,6 +21,7 @@ namespace CodeBase.Units.Hero
 		public float SpeedPercent => Mathf.InverseLerp(0, _settings.MaxMoveSpeed, Mathf.Abs(_currentHorizontalSpeed));
 		
 		[SerializeField] private HeroMoveSettings _settings;
+		[SerializeField] private ParticleSystem _walkVfx;
 
 		private const int ClosestPointFindAttempts = 10;
 
@@ -35,6 +38,8 @@ namespace CodeBase.Units.Hero
 		private float _fallSpeed;
 		private float _lastJumpBtnPressTime;
 		private bool _inputDisabled = false;
+		private Vector3 _walkVfxDefaultPosition;
+		private Quaternion _walkVfxDefaultRotation;
 
 		[Inject]
 		private void Construct(IInputService inputService)
@@ -47,13 +52,21 @@ namespace CodeBase.Units.Hero
 		private void OnEnable()
 		{
 			_inputService.JumpBtnPressed += OnJumpBtnPress;
+			_inputService.RestartBtnPressed += Disable;
 			_collisionDetector.BottomCollided += OnBottomCollide;
 		}
 
 		private void OnDisable()
 		{
 			_inputService.JumpBtnPressed -= OnJumpBtnPress;
+			_inputService.RestartBtnPressed -= Disable;
 			_collisionDetector.BottomCollided -= OnBottomCollide;
+		}
+
+		private void Start()
+		{
+			_walkVfxDefaultPosition = _walkVfx.transform.localPosition;
+			_walkVfxDefaultRotation = _walkVfx.transform.localRotation;
 		}
 
 		private void Update()
@@ -69,6 +82,8 @@ namespace CodeBase.Units.Hero
 			CalculateJumpApex();
 			CalculateGravity();
 			CalculateJump();
+			FlipWalkVfx();
+			ControlWalkVfxVisibility();
 		}
 
 		public override void Disable()
@@ -83,6 +98,10 @@ namespace CodeBase.Units.Hero
 		{
 			_animator.PlayLanding();
 			
+			_collisionDetector.TryGetComponentFromBottomCollisions(out List<DeathRayHoldingButton> holdingButtons);
+			if(holdingButtons.Count == 0)
+				SetWalkVfxParent();
+			
 			if (HasBufferedJump())
 				Jump();
 		}
@@ -91,6 +110,12 @@ namespace CodeBase.Units.Hero
 		{
 			_lastJumpBtnPressTime = Time.time;
 			Jump();
+		}
+
+		private void ControlWalkVfxVisibility()
+		{
+			ParticleSystem.EmissionModule walkVfxEmission = _walkVfx.emission;
+			walkVfxEmission.enabled = _currentHorizontalSpeed != 0;
 		}
 
 		private void CalculateVelocity()
@@ -109,12 +134,29 @@ namespace CodeBase.Units.Hero
 				transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
 		}
 
+		private void FlipWalkVfx()
+		{
+			ParticleSystem.VelocityOverLifetimeModule walkVfxVelocityOverLifetime = _walkVfx.velocityOverLifetime;
+
+			if(_inputService.AxisX > 0)
+				walkVfxVelocityOverLifetime.x = -1 * Mathf.Abs(walkVfxVelocityOverLifetime.x.constant);
+			else if(_inputService.AxisX < 0)
+				walkVfxVelocityOverLifetime.x = Mathf.Abs(walkVfxVelocityOverLifetime.x.constant);
+		}
+
 		private void Tilt()
 		{
-			Vector3 targetRotVector = new Vector3(0, 0, 
+			Vector3 targetRotationVector = new Vector3(0, 0, 
 				Mathf.Lerp(-_settings.MaxTilt, _settings.MaxTilt, Mathf.InverseLerp(-1, 1, _inputService.AxisX)));
+			
 			transform.rotation = Quaternion.RotateTowards(
-				transform.rotation, Quaternion.Euler(targetRotVector), _settings.TiltSpeed * Time.deltaTime);
+				transform.rotation, Quaternion.Euler(targetRotationVector), _settings.TiltSpeed * Time.deltaTime);
+
+			float targetWalkVfxRotationZ = Mathf.Lerp(-_settings.MaxTilt - _walkVfxDefaultRotation.z,
+				_settings.MaxTilt + _walkVfxDefaultRotation.z, Mathf.InverseLerp(-1, 1, _inputService.AxisX));
+			Vector3 walkVfxTargetRotationVector = new Vector3(0, 0, targetWalkVfxRotationZ);
+			_walkVfx.transform.rotation = Quaternion.RotateTowards(
+				_walkVfx.transform.rotation, Quaternion.Euler(walkVfxTargetRotationVector), _settings.TiltSpeed * Time.deltaTime);
 		}
 
 		private void Walk()
@@ -204,6 +246,7 @@ namespace CodeBase.Units.Hero
 			if (canClimbAssist && _inputDisabled == false)
 			{
 				_inputDisabled = true;
+				UnParentWalkVfx();
 				transform.DOMove(climbPoint, _settings.ClimbDuration).OnComplete(() => _inputDisabled = false);
 			}
 				
@@ -241,8 +284,22 @@ namespace CodeBase.Units.Hero
 		{
 			if (_collisionDetector.BoxCollisions.BottomCollision == false) return;
 
+			UnParentWalkVfx();
 			_currentVerticalSpeed = _settings.JumpHeight;
 			_animator.PlayJump();
+		}
+
+		private void SetWalkVfxParent()
+		{
+			_walkVfx.transform.SetParent(transform);
+			_walkVfx.transform.localPosition = _walkVfxDefaultPosition;
+			_walkVfx.transform.localScale = Vector3.one;
+			_walkVfx.transform.localRotation = _walkVfxDefaultRotation;
+		}
+		
+		private void UnParentWalkVfx()
+		{
+			_walkVfx.transform.SetParent(null);
 		}
 	}
 }

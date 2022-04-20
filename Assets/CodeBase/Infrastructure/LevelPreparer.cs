@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CodeBase.Extensions;
 using CodeBase.Services;
 using CodeBase.StaticData;
 using CodeBase.Units;
@@ -46,7 +47,9 @@ namespace CodeBase.Infrastructure
 			foreach (EnemySpawnPointStaticData spawnPoint in _levelData.EnemySpawners)
 			{
 				GameObject enemy = _enemyFactory.CreateEnemy(spawnPoint.EnemyTypeId, spawnPoint.Position);
-				_enemies.Add(enemy.GetComponent<UnitDeath>());
+				UnitDeath enemyDeath = enemy.GetComponentInObjectOrChildren<UnitDeath>();
+				
+				_enemies.Add(enemyDeath);
 			}
 		}
 

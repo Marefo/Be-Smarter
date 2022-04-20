@@ -20,7 +20,7 @@ GameObject:
   - component: {fileID: 7195062912507727031}
   - component: {fileID: 7195062912507727024}
   m_Layer: 8
-  m_Name: Enemy
+  m_Name: ChaserEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -171,20 +171,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc72fda781cd475bad1ace947f0f329e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _enemyMovementSettings: {fileID: 11400000, guid: 0a19c38145a88ce45b41298c1bc917d8,
+    type: 2}
+  _chaserSettings: {fileID: 11400000, guid: 4b90655c5ea2fdb47ab997c5d97c268c, type: 2}
   _agroZone: {fileID: 7195062913341516599}
-  _confusionTime: 0.5
-  _maxMoveSpeed: 2.2
-  _acceleration: 5
-  _deAcceleration: 15
-  _climbDuration: 0.04
-  _climbAssistHeight: 0.05
-  _fallSpeed: 15
-  _jumpSpeed: 8
-  _jumpPercentLength: 50
-  _jumpHeight: 0.32
-  _jumpDuration: 0.4
-  _maxTilt: 5
-  _tiltSpeed: 5
+  _landVfx: {fileID: 3390546335932029381, guid: 1c0824e82e3943b43bcbaf0a64e12b2c,
+    type: 3}
 --- !u!114 &7195062912507727035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -197,31 +189,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 910c646b2102435b95d9666166eff3b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _physicalObjFilter:
-    useTriggers: 0
-    useLayerMask: 1
-    useDepth: 0
-    useOutsideDepth: 0
-    useNormalAngle: 0
-    useOutsideNormalAngle: 0
-    layerMask:
-      serializedVersion: 2
-      m_Bits: 256
-    minDepth: 0
-    maxDepth: 0
-    minNormalAngle: 0
-    maxNormalAngle: 0
-  _physicalObjLayer:
-    serializedVersion: 2
-    m_Bits: 256
-  _unitBounds:
-    m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 0.068, y: 0.11, z: 0}
-  _sideRaysCount: 3
-  _verticalRaysLength: 0.04
-  _horizontalRaysLength: 0.02
-  _raysInnerOffset: 0.005
-  _raysShift: 0.01
+  _settings: {fileID: 11400000, guid: e32fe0e29e701e4429e2714a1e1d14af, type: 2}
 --- !u!114 &7195062912507727029
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -247,7 +215,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dcff698e6f141ed8364805217396444, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _vfxPrefab: {fileID: 8335744953633663360, guid: 0da7fc4600eac374bad00a9d923c9411,
+  _vfxPrefab: {fileID: 1968986386834678192, guid: 3c7059d83fe31ff4789dcc24ae8d0a0b,
     type: 3}
 --- !u!114 &7195062912507727031
 MonoBehaviour:

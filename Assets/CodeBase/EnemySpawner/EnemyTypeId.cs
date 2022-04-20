@@ -2,6 +2,7 @@ namespace CodeBase.EnemySpawner
 {
 	public enum EnemyTypeId
 	{
-		Chaser
+		Chaser,
+		Patroller
 	}
 }

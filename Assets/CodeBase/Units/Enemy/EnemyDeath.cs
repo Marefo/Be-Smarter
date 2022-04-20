@@ -8,7 +8,7 @@ namespace CodeBase.Units.Enemy
 	{
 		public override event Action<UnitDeath> Died;
 		
-		[SerializeField] private ParticleSystem _vfxPrefab;
+		[SerializeField] private GameObject _vfxPrefab;
 
 		public override void Die()
 		{

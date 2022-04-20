@@ -182,6 +182,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48111b946cfd8ad4094afb135ac26694, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _fadeInDuration: 1
+  _fadeOutDuration: 1
   _curtain: {fileID: 7103652248359352498}
   _field: {fileID: 7103652248630215922}
 --- !u!1 &7103652248630215924

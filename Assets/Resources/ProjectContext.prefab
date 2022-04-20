@@ -74,9 +74,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28ff550af4164e99970808392a79a0c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _coroutineRunner: {fileID: 8137673669925935706}
-  _loadingCurtain: {fileID: 7103652248359352462, guid: 131eeeded22100344972c0930362fff2,
+  _loadingCurtainPrefab: {fileID: 7103652248359352501, guid: 131eeeded22100344972c0930362fff2,
     type: 3}
+  _coroutineRunner: {fileID: 8137673669925935706}
 --- !u!114 &8137673669925935706
 MonoBehaviour:
   m_ObjectHideFlags: 0

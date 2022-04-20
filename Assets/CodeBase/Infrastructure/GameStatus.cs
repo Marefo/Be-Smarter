@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using CodeBase.Units;
-using CodeBase.Units.Enemy;
 using CodeBase.Units.Hero;
 using UnityEngine;
 
 namespace CodeBase.Infrastructure
 {
-	public class GameStatus : IDisposable
+	public class GameStatus
 	{
 		public event Action Won;
 		public event Action Lost;
@@ -24,23 +22,20 @@ namespace CodeBase.Infrastructure
 			_enemies = enemies;
 
 			EnemiesInitialized?.Invoke(enemies.Count);
-			SubscribeEvents();
+			SubscribeUnitEvents();
 		}
 
-		public void Dispose()
-		{
-			CleanUp();
-		}
-
-		private void SubscribeEvents()
+		private void SubscribeUnitEvents()
 		{
 			_hero.Died += OnHeroDie;
-			_enemies.ForEach(enemy => enemy.Died += OnEnemyDie);
+			_hero.Destroyed += UnSubscribeHeroEvents;
+			_enemies.ForEach(enemy => enemy.Died += SubscribeEnemyEvents);
 		}
 
-		private void CleanUp()
+		private void SubscribeEnemyEvents(UnitDeath unit)
 		{
-			_hero.Died += OnHeroDie;
+			unit.Died += OnEnemyDie;
+			unit.Destroyed += UnSubscribeEnemyEvents;
 		}
 
 		private void OnHeroDie(UnitDeath unitDeath)
@@ -49,10 +44,16 @@ namespace CodeBase.Infrastructure
 			Lost?.Invoke();
 		}
 
+		private void UnSubscribeHeroEvents(UnitDeath hero)
+		{
+			hero.Died -= OnHeroDie;
+			hero.Destroyed -= UnSubscribeHeroEvents;
+		}
+
 		private void OnEnemyDie(UnitDeath enemy)
 		{
 			EnemyDied?.Invoke(enemy);
-			enemy.Died -= OnEnemyDie;
+			UnSubscribeEnemyEvents(enemy);
 
 			if (enemy != null)
 				_enemies.Remove(enemy);
@@ -64,6 +65,12 @@ namespace CodeBase.Infrastructure
 				Debug.Log("Won!");
 				Won?.Invoke();
 			}
+		}
+
+		private void UnSubscribeEnemyEvents(UnitDeath enemy)
+		{
+			enemy.Died -= OnEnemyDie;
+			enemy.Destroyed -= UnSubscribeEnemyEvents;
 		}
 	}
 }

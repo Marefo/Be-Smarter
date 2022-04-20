@@ -1,10 +1,11 @@
 ﻿using System;
-using CodeBase.StaticData;
+using CodeBase.Logic;
+using CodeBase.Units;
 using CodeBase.Units.Hero;
 using DG.Tweening;
 using UnityEngine;
 
-namespace CodeBase.Logic
+namespace CodeBase.Cube
 {
 	[RequireComponent(typeof(Rigidbody2D), typeof(Interactable))]
 	public class Cube : MonoBehaviour, IHoldingBtnActivator
@@ -18,6 +19,7 @@ namespace CodeBase.Logic
 		private Interactable _interactable;
 		private Rigidbody2D _rigidbody;
 		private HeroMovement _heroMovement;
+		private HeroDeath _heroDeath;
 		private bool _pickedUp = false;
 		private int _defaultLayer;
 		private Sequence _push;
@@ -38,6 +40,12 @@ namespace CodeBase.Logic
 			_interactable.Interacted -= OnInteract;	
 		}
 
+		private void OnDestroy()
+		{
+			if (_heroDeath)
+				_heroDeath.Died -= OnHeroDie;
+		}
+
 		private void Start()
 		{
 			_defaultLayer = gameObject.layer;
@@ -51,12 +59,20 @@ namespace CodeBase.Logic
 		private void OnInteract(HeroMovement heroMovement)
 		{
 			_heroMovement = heroMovement;
+
+			if (_heroDeath == null)
+			{
+				_heroDeath = _heroMovement.GetComponent<HeroDeath>();
+				_heroDeath.Died += OnHeroDie;
+			}
 			
 			if(_pickedUp)
 				Drop();
 			else
 				PickUp();
 		}
+
+		private void OnHeroDie(UnitDeath obj) => Drop();
 
 		private void PickUp()
 		{

@@ -1,4 +1,5 @@
 ﻿using CodeBase.EnemySpawner;
+using CodeBase.Extensions;
 using CodeBase.Services;
 using CodeBase.StaticData;
 using CodeBase.Units.Enemy;
@@ -23,7 +24,7 @@ namespace CodeBase.Infrastructure
 		{
 			EnemyStaticData enemyData = _staticDataService.LoadEnemyData(enemyTypeId);
 			GameObject enemy = Object.Instantiate(enemyData.Prefab, position, Quaternion.identity);
-			EnemyMovement movement = enemy.GetComponent<EnemyMovement>();
+			EnemyMovement movement = enemy.GetComponentInObjectOrChildren<EnemyMovement>();
 			
 			movement.Construct(_coroutineRunner);
 

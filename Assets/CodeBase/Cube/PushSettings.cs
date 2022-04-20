@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
-namespace CodeBase.StaticData
+namespace CodeBase.Cube
 {
-	[CreateAssetMenu(fileName = "PushSettings", menuName = "StaticData/PushSettings")]
+	[CreateAssetMenu(fileName = "PushSettings", menuName = "Settings/Push")]
 	public class PushSettings : ScriptableObject
 	{
 		public float PushDistance;

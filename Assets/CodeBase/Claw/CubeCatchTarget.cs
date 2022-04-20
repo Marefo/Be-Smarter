@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CodeBase.Claw
 {
-	[RequireComponent(typeof(Rigidbody2D), typeof(Interactable), typeof(Cube))]
+	[RequireComponent(typeof(Rigidbody2D), typeof(Interactable), typeof(Cube.Cube))]
 	[RequireComponent(typeof(SpriteRenderer))]
 	public class CubeCatchTarget : MonoBehaviour, ICatchTarget
 	{
@@ -14,13 +14,13 @@ namespace CodeBase.Claw
 		private SpriteRenderer _sprite;
 		private Interactable _interactable;
 		private Rigidbody2D _rigidbody;
-		private Cube _cube;
+		private Cube.Cube _cube;
 
 		private void Awake()
 		{
 			_rigidbody = GetComponent<Rigidbody2D>();
 			_sprite = GetComponent<SpriteRenderer>();
-			_cube = GetComponent<Cube>();
+			_cube = GetComponent<Cube.Cube>();
 			_interactable = GetComponent<Interactable>();
 		}
 
