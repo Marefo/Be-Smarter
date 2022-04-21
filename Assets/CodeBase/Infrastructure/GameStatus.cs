@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.UI;
 using CodeBase.Units;
+using CodeBase.Units.Enemy;
 using CodeBase.Units.Hero;
 using UnityEngine;
 
@@ -13,9 +15,16 @@ namespace CodeBase.Infrastructure
 		public event Action<int> EnemiesInitialized;
 		public event Action<UnitDeath> EnemyDied;
 
+		private readonly LoadingCurtain _loadingCurtain;
+		
 		private HeroDeath _hero;
 		private List<UnitDeath> _enemies;
-		
+
+		public GameStatus(LoadingCurtain loadingCurtain)
+		{
+			_loadingCurtain = loadingCurtain;
+		}
+
 		public void SetUnits(HeroDeath hero, List<UnitDeath> enemies)
 		{
 			_hero = hero;
@@ -29,13 +38,13 @@ namespace CodeBase.Infrastructure
 		{
 			_hero.Died += OnHeroDie;
 			_hero.Destroyed += UnSubscribeHeroEvents;
-			_enemies.ForEach(enemy => enemy.Died += SubscribeEnemyEvents);
+			_enemies.ForEach(SubscribeEnemyEvents);
 		}
 
-		private void SubscribeEnemyEvents(UnitDeath unit)
+		private void SubscribeEnemyEvents(UnitDeath enemy)
 		{
-			unit.Died += OnEnemyDie;
-			unit.Destroyed += UnSubscribeEnemyEvents;
+			enemy.Died += OnEnemyDie;
+			enemy.Destroyed += UnSubscribeEnemyEvents;
 		}
 
 		private void OnHeroDie(UnitDeath unitDeath)
@@ -59,7 +68,7 @@ namespace CodeBase.Infrastructure
 				_enemies.Remove(enemy);
 			else
 				_enemies.RemoveAll(x => x == null);
-
+			
 			if (_enemies.Count == 0)
 			{
 				Debug.Log("Won!");

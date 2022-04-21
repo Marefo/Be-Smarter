@@ -13,6 +13,4 @@ MonoBehaviour:
   m_Name: Level-1
   m_EditorClassIdentifier: 
   Name: Level-1
-  EnemySpawners:
-  - EnemyTypeId: 1
-    Position: {x: 2.164, y: -0.128, z: 0}
+  EnemySpawners: []

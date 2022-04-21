@@ -50,6 +50,8 @@ namespace CodeBase.Units.Enemy
 			_collisionDetector.UpdateBoxCollisions();
 			_collisionDetector.UpdateCollisionEvents();
 			
+			if(_activated == false) return;
+			
 			if(_hero != null)
 				Chase();
 			

@@ -1,21 +1,37 @@
-﻿using UnityEngine;
+﻿using CodeBase.StaticData;
+using UnityEngine;
 
 namespace CodeBase.Services
 {
 	public class ProgressService : IProgressService
 	{
-		private const string SceneKey = "Scene";
-		private const string FirstLevelScene = "Level-1";
+		private const int FirstLevelIndex = 1;
+
+		public int SceneIndex { get => LoadSavedScene(); set => SaveScene(value); }
 		
-		public string SceneName { get => LoadSavedScene(); set => SaveScene(value); }
+		private ProgressStaticData _progress => _staticDataService.LoadProgressData();
+		private readonly StaticDataService _staticDataService;
 
-		private string LoadSavedScene()
+		public ProgressService(StaticDataService staticDataService)
 		{
-			string savedScene = PlayerPrefs.GetString(SceneKey);
-
-			return savedScene != "" ? savedScene : FirstLevelScene;
+			_staticDataService = staticDataService;
 		}
 
-		private void SaveScene(string name) => PlayerPrefs.SetString(SceneKey, name);
+		public int GetFirstLevelIndex() => FirstLevelIndex;
+
+		private int LoadSavedScene()
+		{
+			int savedSceneIndex = _progress.SceneIndex;
+			
+			if (savedSceneIndex == 0)
+			{
+				savedSceneIndex = FirstLevelIndex;
+				SaveScene(savedSceneIndex);
+			}
+
+			return savedSceneIndex;
+		}
+
+		private void SaveScene(int index) => _progress.SceneIndex = index;
 	}
 }

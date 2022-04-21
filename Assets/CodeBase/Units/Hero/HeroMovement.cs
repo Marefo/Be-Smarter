@@ -45,10 +45,14 @@ namespace CodeBase.Units.Hero
 		private void Construct(IInputService inputService)
 		{
 			_inputService = inputService;
+		}
+
+		private void Awake()
+		{
 			_collisionDetector = GetComponent<CollisionDetector>();
 			_animator = GetComponent<UnitAnimator>();
 		}
-		
+
 		private void OnEnable()
 		{
 			_inputService.JumpBtnPressed += OnJumpBtnPress;
@@ -75,6 +79,8 @@ namespace CodeBase.Units.Hero
 			_collisionDetector.UpdateBoxCollisions();
 			_collisionDetector.UpdateCollisionEvents();
 
+			if(_activated == false) return;
+			
 			CalculateVelocity();
 			FlipSprite();
 			Walk();

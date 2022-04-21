@@ -2,6 +2,7 @@ namespace CodeBase.Services
 {
 	public interface IProgressService
 	{
-		string SceneName { get; set; }
+		int SceneIndex { get; set; }
+		int GetFirstLevelIndex();
 	}
 }

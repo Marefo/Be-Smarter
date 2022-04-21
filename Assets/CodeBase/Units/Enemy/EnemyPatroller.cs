@@ -36,7 +36,10 @@ namespace CodeBase.Units.Enemy
 			_collisionDetector.CalculateRaysPosition();
 			_collisionDetector.UpdateBoxCollisions();
 			_collisionDetector.UpdateCollisionEvents();
-			
+
+
+			if(_activated == false) return;
+
 			Move();
 			Tilt();
 			FlipWalkVfx();
@@ -84,7 +87,7 @@ namespace CodeBase.Units.Enemy
 		{
 			if (ReachedTargetPoint() && _patrolling)
 				OnReachTargetPoint();
-			
+
 			if (CanMove() == false)
 			{
 				TryClimbAssist();

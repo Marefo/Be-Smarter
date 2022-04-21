@@ -42,7 +42,7 @@ namespace CodeBase.Logic
 
 		private void OnRestartBtnPress()
 		{
-			if(_restarting) return;
+			if(_restarting || _loadingCurtain.Active == true) return;
 			
 			_restarting = true;
 			_loadingCurtain.FadeIn(OnFadeIn);
@@ -60,7 +60,7 @@ namespace CodeBase.Logic
 		private void OnFadeIn()
 		{
 			_sceneLoader.ReloadCurrentScene();
-			_loadingCurtain.FadeOut();
+			_loadingCurtain.FadeOutWithDelay();
 		}
 	}
 }

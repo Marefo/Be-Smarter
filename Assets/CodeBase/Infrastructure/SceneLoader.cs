@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,22 +15,33 @@ namespace CodeBase.Infrastructure
 			_coroutineRunner = coroutineRunner;
 		}
 
+		public int GetSceneCount() => SceneManager.sceneCountInBuildSettings;
+
+		public int GetCurrentSceneIndex() => SceneManager.GetActiveScene().buildIndex;
+		
 		public void ReloadCurrentScene() => SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
-		public void Load(string nextScene, Action onLoaded = null)
-		{
-			_coroutineRunner.StartCoroutine(LoadCoroutine(nextScene, onLoaded));
-		}
 
-		private IEnumerator LoadCoroutine(string nextScene, Action onLoaded = null)
+		public void Load(string sceneName, Action onLoaded = null) => 
+			_coroutineRunner.StartCoroutine(LoadSceneCoroutine(sceneName, onLoaded));
+
+
+		public void Load(int sceneIndex, Action onLoaded = null) => 
+			_coroutineRunner.StartCoroutine(LoadSceneCoroutine(sceneIndex, onLoaded));
+
+		private IEnumerator LoadSceneCoroutine(string sceneName, Action onLoaded = null)
 		{
-			if (SceneManager.GetActiveScene().name == nextScene)
-			{
-				onLoaded?.Invoke();
-				yield break;
-			}
+			AsyncOperation waitNextScene = SceneManager.LoadSceneAsync(sceneName);
+
+			while (!waitNextScene.isDone)
+				yield return null;
       
-			AsyncOperation waitNextScene = SceneManager.LoadSceneAsync(nextScene);
+			onLoaded?.Invoke();
+		}
+		
+		private IEnumerator LoadSceneCoroutine(int sceneIndex, Action onLoaded = null)
+		{
+			AsyncOperation waitNextScene = SceneManager.LoadSceneAsync(sceneIndex);
 
 			while (!waitNextScene.isDone)
 				yield return null;

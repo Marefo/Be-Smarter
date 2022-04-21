@@ -1,37 +1,19 @@
-﻿using CodeBase.Services;
-using CodeBase.UI;
-using UnityEngine;
+﻿using UnityEngine;
 using Zenject;
 
 namespace CodeBase.Infrastructure
 {
 	public class GameBootstrapper : MonoBehaviour
 	{
-		private LoadingCurtain _loadingCurtain;
-		private IProgressService _progressService;
-		private SceneLoader _sceneLoader;
+		private LevelLoader _levelLoader;
 
 		[Inject]
-		private void Construct(LoadingCurtain loadingCurtain, IProgressService progressService, SceneLoader sceneLoader)
+		private void Construct(LevelLoader levelLoader)
 		{
-			_loadingCurtain = loadingCurtain;
-			_progressService = progressService;
-			_sceneLoader = sceneLoader;
-			
+			_levelLoader = levelLoader;
 			StartBootstrap();
 		}
 
-		private void StartBootstrap()
-		{
-			_loadingCurtain.FadeIn();
-			
-			string sceneName = _progressService.SceneName;
-			_sceneLoader.Load(sceneName, OnLoad);
-		}
-
-		private void OnLoad()
-		{
-			_loadingCurtain.FadeOut();
-		}
+		private void StartBootstrap() => _levelLoader.LoadSavedLevel();
 	}
 }
