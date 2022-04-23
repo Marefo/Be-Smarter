@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: ChaserMovementSettings
   m_EditorClassIdentifier: 
   Acceleration: 5
-  DeAcceleration: 15
+  DeAcceleration: 20
   MaxMoveSpeed: 2.2
   FallSpeed: 15
   MaxTilt: 5
   TiltSpeed: 5
-  ClimbAssistHeight: 0.04
-  ClimbDuration: 0.05
+  ClimbAssistHeight: 0.1
+  ClimbDuration: 0.06

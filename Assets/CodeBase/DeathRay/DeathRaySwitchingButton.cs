@@ -1,9 +1,7 @@
 using System;
 using CodeBase.Logic;
-using CodeBase.Services;
 using CodeBase.Units.Hero;
 using UnityEngine;
-using Zenject;
 
 namespace CodeBase.DeathRay
 {

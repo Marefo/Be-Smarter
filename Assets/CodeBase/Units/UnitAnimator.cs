@@ -5,6 +5,7 @@ namespace CodeBase.Units
 	public class UnitAnimator : MonoBehaviour
 	{
 		[SerializeField] private Animator _animator;
+		[SerializeField] private float _walkSpeedMultiplier = 1;
 		
 		private readonly int _isWalkingHash = Animator.StringToHash("IsWalking");
 		private readonly int _walkingSpeedHash = Animator.StringToHash("WalkingSpeed");
@@ -14,7 +15,7 @@ namespace CodeBase.Units
 		public void PlayWalk(float speed)
 		{
 			_animator.SetBool(_isWalkingHash, speed != 0);
-			_animator.SetFloat(_walkingSpeedHash, speed);
+			_animator.SetFloat(_walkingSpeedHash, speed * _walkSpeedMultiplier);
 		}
 
 		public void PlayJump()

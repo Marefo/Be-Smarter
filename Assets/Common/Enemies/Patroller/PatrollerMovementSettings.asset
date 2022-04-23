@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: PatrollerMovementSettings
   m_EditorClassIdentifier: 
   Acceleration: 4
-  DeAcceleration: 3
+  DeAcceleration: 5
   MaxMoveSpeed: 1.5
   FallSpeed: 15
   MaxTilt: 5
   TiltSpeed: 5
-  ClimbAssistHeight: 0.04
-  ClimbDuration: 0.05
+  ClimbAssistHeight: 0.1
+  ClimbDuration: 0.06

@@ -6,6 +6,7 @@ using CodeBase.Logic;
 using CodeBase.StaticData;
 using JetBrains.Annotations;
 using UnityEngine;
+using Vertx.Debugging;
 
 namespace CodeBase.Collisions
 {
@@ -30,7 +31,7 @@ namespace CodeBase.Collisions
 		
 		public bool CanMoveToPoint(Vector3 point) => GetCollisionsInPoint(point).Count == 0;
 
-		public List<Collider2D> GetCollisionsInPoint(Vector3 point)
+		private List<Collider2D> GetCollisionsInPoint(Vector3 point)
 		{
 			List<Collider2D> overlapped = new List<Collider2D>();
 			Physics2D.OverlapBox(point, _settings.UnitBounds.size, 0, _settings.PhysicalObjFilter, overlapped);
@@ -43,9 +44,9 @@ namespace CodeBase.Collisions
 
 		public Vector2 GetClimbPointToCollider(Collider2D colliderForClimb, float climbHeight)
 		{
-			bool canClimbAssist = Bounds.min.y + climbHeight >= colliderForClimb.bounds.max.y;
+			bool canClimb = _unitsBoundsInWorld.min.y - _settings.VerticalRaysLength + climbHeight > colliderForClimb.bounds.max.y;
 
-			if (canClimbAssist == false) return Vector2.zero;
+			if (canClimb == false) return Vector2.zero;
 			
 			float collidedMinX = colliderForClimb.bounds.min.x;
 			float collidedMaxX = colliderForClimb.bounds.max.x;
@@ -56,7 +57,7 @@ namespace CodeBase.Collisions
 					? collidedMinX
 					: collidedMaxX;
 
-			float climbedPositionY = transform.position.y + colliderForClimb.bounds.max.y + _settings.VerticalRaysLength - Bounds.min.y;
+			float climbedPositionY = transform.position.y + Mathf.Abs(colliderForClimb.bounds.max.y - _unitsBoundsInWorld.min.y) + _settings.VerticalRaysLength;
 		
 			return new Vector2(closestPositionX, climbedPositionY);
 		}

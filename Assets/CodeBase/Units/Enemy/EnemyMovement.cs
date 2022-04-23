@@ -33,14 +33,6 @@ namespace CodeBase.Units.Enemy
 		}
 
 		protected abstract int GetMoveDirection();
-		
-		protected void FlipSprite()
-		{
-			if (_moveDirection > 0)
-				transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-			else if (_moveDirection < 0)
-				transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-		}
 
 		protected void Tilt()
 		{

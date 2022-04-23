@@ -170,7 +170,7 @@ namespace CodeBase.Units.Hero
 			if (CanMove() == false)
 			{
 				_animator.PlayWalk(0);
-				
+
 				if (TryClimbAssist() == false)
 					MoveToClosestAvailablePoint();
 				
@@ -225,7 +225,8 @@ namespace CodeBase.Units.Hero
 			for (int i = 1; i < ClosestPointFindAttempts; i++)
 			{
 				float t = (float) i / ClosestPointFindAttempts;
-				Vector2 currentTryPosition = Vector2.Lerp(currentPosition, furthestPoint, t);
+				float currentTryPositionX = Mathf.Lerp(currentPosition.x, furthestPoint.x, t);
+				Vector3 currentTryPosition = new Vector3(currentTryPositionX, currentPosition.y, currentPosition.z);
 
 				if (_collisionDetector.CanMoveToPoint(currentTryPosition))
 				{

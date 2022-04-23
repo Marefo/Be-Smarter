@@ -12,16 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa9c12b0316d495385e2068985a07691, type: 3}
   m_Name: HeroMoveSettings
   m_EditorClassIdentifier: 
-  MaxMoveSpeed: 2.5
+  MaxMoveSpeed: 2.3
   Acceleration: 6
-  DeAcceleration: 12
+  DeAcceleration: 9
   MaxTilt: 7
-  TiltSpeed: 15
-  ClimbDuration: 0.04
-  ClimbAssistHeight: 0.05
+  TiltSpeed: 18
+  ClimbDuration: 0.06
+  ClimbAssistHeight: 0.1
   MinFallSpeed: 7
   MaxFallSpeed: 15
-  JumpHeight: 3.3
+  JumpHeight: 3
   ApexThreshold: 3
-  ApexAdditionalSpeed: 1.5
+  ApexAdditionalSpeed: 1.3
   BufferedJumpTime: 0.05

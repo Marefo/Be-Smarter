@@ -76,11 +76,14 @@ namespace CodeBase.Units.Enemy
 
 			_hero = heroMovement.transform;
 			
-			if (BlockedByCube() == false)
+			if (BlockedByCube() == false && HeroAtSameHeight() == true)
 				Jump();
 			else
 				_canChase = true;
 		}
+
+		private bool HeroAtSameHeight() => 
+			transform.position.y <= _hero.position.y + Mathf.Abs(_collisionDetector.Bounds.extents.y);
 
 		private void OnAgroZoneCancel(Collider2D obj)
 		{
@@ -123,6 +126,14 @@ namespace CodeBase.Units.Enemy
 			_animator.PlayJump();
 		}
 
+		private void FlipSprite()
+		{
+			if (_moveDirection > 0)
+				_sprite.flipX = false;
+			else if (_moveDirection < 0)
+				_sprite.flipX = true;
+		}
+		
 		private void OnJumpComplete()
 		{
 			_isJumping = false;
@@ -160,6 +171,7 @@ namespace CodeBase.Units.Enemy
 			if (CanMove() == false)
 			{
 				TryClimbAssist();
+				_currentHorizontalSpeed = 0;
 				_animator.PlayWalk(0);
 				return;
 			}

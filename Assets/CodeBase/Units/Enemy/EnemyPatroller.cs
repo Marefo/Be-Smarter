@@ -7,18 +7,17 @@ namespace CodeBase.Units.Enemy
 	public class EnemyPatroller : EnemyMovement
 	{
 		[SerializeField] private PatrollerSettings _patrollerSettings;
-		[Space(10)]
-		[SerializeField] private List<Transform> _wayPoints;
 		[Space(10)] 
 		[SerializeField] private ParticleSystem _brakeVfx;
 
 		private int _previousPointIndex => _targetPointIndex != 0 ? _targetPointIndex - 1 : _wayPoints.Count - 1;
+		private List<Transform> _wayPoints;
 		private int _targetPointIndex = 0;
 		private bool _patrolling = false;
 		private float _currentVerticalSpeed = 0;
 		private UnitAnimator _animator;
 		private ParticleSystem.EmissionModule _brakeVfxEmission;
-		
+
 		private void Awake()
 		{
 			Init();
@@ -28,7 +27,6 @@ namespace CodeBase.Units.Enemy
 		private void Start()
 		{
 			InitBrakeVfx();
-			StartPatrolling();
 		}
 
 		private void Update()
@@ -36,14 +34,21 @@ namespace CodeBase.Units.Enemy
 			_collisionDetector.CalculateRaysPosition();
 			_collisionDetector.UpdateBoxCollisions();
 			_collisionDetector.UpdateCollisionEvents();
-
-
-			if(_activated == false) return;
+			
+			if(_activated == false || _wayPoints == null) return;
 
 			Move();
 			Tilt();
 			FlipWalkVfx();
 			CalculateGravity();
+		}
+
+		public void SetWayPoints(List<Transform> wayPoints)
+		{
+			if(_wayPoints != null) return;
+			
+			_wayPoints = wayPoints;
+			StartPatrolling();
 		}
 
 		public override void Disable()
@@ -91,6 +96,7 @@ namespace CodeBase.Units.Enemy
 			if (CanMove() == false)
 			{
 				TryClimbAssist();
+				_currentHorizontalSpeed = 0;
 				_animator.PlayWalk(0);
 				return;
 			}
@@ -114,6 +120,14 @@ namespace CodeBase.Units.Enemy
 			_animator.PlayWalk(animationSpeed);
 		}
 
+		private void FlipSprite()
+		{
+			if (_moveDirection > 0)
+				transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+			else if (_moveDirection < 0)
+				transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+		}
+		
 		private bool ReachedTargetPoint()
 		{
 			return _moveDirection > 0 && transform.position.x >= _wayPoints[_targetPointIndex].position.x ||

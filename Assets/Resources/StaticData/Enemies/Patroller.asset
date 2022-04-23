@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Patroller
   m_EditorClassIdentifier: 
   EnemyTypeId: 1
-  Prefab: {fileID: 7875523293053421024, guid: cc07bb2b5f49e4d4082e476c167912a5, type: 3}
+  Prefab: {fileID: 7597820610942761842, guid: 50a4cc625f810564c9d80bb16e8daaae, type: 3}

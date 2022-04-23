@@ -1,41 +1,25 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CodeBase.DeathRay
 {
 	public class DeathRaySystem : MonoBehaviour
 	{
-		[SerializeField] private DeathRay _deathRay;
-		[SerializeField] private DeathRayButton _deathRayButton;
+		[SerializeField] private List<DeathRay> _deathRays;
 		[Space(10)]
-		[SerializeField] private bool _startActive = true;
+		[SerializeField] private List<DeathRayButton> _deathRayButton;
 
 		private void OnEnable()
 		{
-			_deathRayButton.StateChanged += OnStateChange;
+			_deathRayButton.ForEach(btn => btn.StateChanged += OnStateChange);
 		}
 
 		private void OnDisable()
 		{
-			_deathRayButton.StateChanged -= OnStateChange;
+			_deathRayButton.ForEach(btn => btn.StateChanged -= OnStateChange);
 		}
 
-		private void Start() => Init();
-
-		private void Init()
-		{
-			if (_startActive == true)
-				_deathRay.Enable();
-			else
-				_deathRay.Disable();
-		}
-		
-		private void OnStateChange()
-		{
-			if(_deathRay.Active == false)
-				_deathRay.Enable();
-			else
-				_deathRay.Disable();
-		}
+		private void OnStateChange() => _deathRays.ForEach(ray => ray.ChangeState());
 	}
 }
