@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Audio;
 using CodeBase.Collisions;
 using CodeBase.DeathRay;
 using CodeBase.Infrastructure;
@@ -21,7 +22,10 @@ namespace CodeBase.Units.Hero
 		public float SpeedPercent => Mathf.InverseLerp(0, _settings.MaxMoveSpeed, Mathf.Abs(_currentHorizontalSpeed));
 		
 		[SerializeField] private HeroMoveSettings _settings;
+		[Space(10)]
 		[SerializeField] private ParticleSystem _walkVfx;
+		[Space(10)]
+		[SerializeField] private AudioClip _jumpSfx;
 
 		private const int ClosestPointFindAttempts = 10;
 
@@ -40,11 +44,13 @@ namespace CodeBase.Units.Hero
 		private bool _inputDisabled = false;
 		private Vector3 _walkVfxDefaultPosition;
 		private Quaternion _walkVfxDefaultRotation;
+		private SFXPlayer _sfxPlayer;
 
 		[Inject]
-		private void Construct(IInputService inputService)
+		private void Construct(IInputService inputService, SFXPlayer sfxPlayer)
 		{
 			_inputService = inputService;
+			_sfxPlayer = sfxPlayer;
 		}
 
 		private void Awake()
@@ -75,12 +81,10 @@ namespace CodeBase.Units.Hero
 
 		private void Update()
 		{
-			_collisionDetector.CalculateRaysPosition();
-			_collisionDetector.UpdateBoxCollisions();
-			_collisionDetector.UpdateCollisionEvents();
+			UpdateCollisionDetector();
 
 			if(_activated == false) return;
-			
+
 			CalculateVelocity();
 			FlipSprite();
 			Walk();
@@ -100,14 +104,21 @@ namespace CodeBase.Units.Hero
 			_animator.PlayIdle();
 		}
 
+		private void UpdateCollisionDetector()
+		{
+			_collisionDetector.CalculateRaysPosition();
+			_collisionDetector.UpdateBoxCollisions();
+			_collisionDetector.UpdateCollisionEvents();
+		}
+
 		private void OnBottomCollide()
 		{
 			_animator.PlayLanding();
 			
 			_collisionDetector.TryGetComponentFromBottomCollisions(out List<DeathRayHoldingButton> holdingButtons);
-			if(holdingButtons.Count == 0)
+			if (holdingButtons.Count == 0)
 				SetWalkVfxParent();
-			
+
 			if (HasBufferedJump())
 				Jump();
 		}
@@ -267,7 +278,8 @@ namespace CodeBase.Units.Hero
 				_currentVerticalSpeed = 0;
 		}
 
-		private void CalculateJumpApex() {
+		private void CalculateJumpApex()
+		{
 			if (_collisionDetector.BoxCollisions.BottomCollision == false)
 			{
 				_apexPoint = Mathf.InverseLerp(_settings.ApexThreshold, 0, Mathf.Abs(_velocity.y));
@@ -294,6 +306,7 @@ namespace CodeBase.Units.Hero
 			UnParentWalkVfx();
 			_currentVerticalSpeed = _settings.JumpHeight;
 			_animator.PlayJump();
+			_sfxPlayer.Play(_jumpSfx);
 		}
 
 		private void SetWalkVfxParent()

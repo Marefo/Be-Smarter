@@ -10,6 +10,8 @@ namespace CodeBase.DeathRay
 	public class DeathRay : MonoBehaviour
 	{
 		[SerializeField] private bool _startActive = true;
+		[Space(10)]
+		[SerializeField] private AudioSource _audioSource;
 		
 		private Collider2D _collider;
 		private SpriteRenderer _spriteRenderer;
@@ -49,14 +51,16 @@ namespace CodeBase.DeathRay
 		{
 			_active = true;
 			_collider.enabled = true;
-			_spriteRenderer.DOFade(1, 0.15f);
+			_audioSource.Play();
+			_spriteRenderer.DOFade(1, 0.18f);
 		}
 
 		private void Disable()
 		{
 			_active = false;
 			_collider.enabled = false;
-			_spriteRenderer.DOFade(0, 0.15f);
+			_audioSource.Stop();
+			_spriteRenderer.DOFade(0, 0.18f);
 		}
 	}
 }

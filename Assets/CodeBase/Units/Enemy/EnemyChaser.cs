@@ -1,4 +1,5 @@
-﻿using CodeBase.Logic;
+﻿using CodeBase.Audio;
+using CodeBase.Logic;
 using CodeBase.Units.Hero;
 using DG.Tweening;
 using UnityEngine;
@@ -10,7 +11,9 @@ namespace CodeBase.Units.Enemy
 		[SerializeField] private ChaserSettings _chaserSettings;
 		[Space(10)]
 		[SerializeField] private TriggerListener _agroZone;
+		[Space(10)]
 		[SerializeField] private GameObject _landVfx;
+		[SerializeField] private AudioClip _agroSfx;
 
 		private Transform _hero;
 		private bool _canChase = false;
@@ -82,9 +85,6 @@ namespace CodeBase.Units.Enemy
 				_canChase = true;
 		}
 
-		private bool HeroAtSameHeight() => 
-			transform.position.y <= _hero.position.y + Mathf.Abs(_collisionDetector.Bounds.extents.y);
-
 		private void OnAgroZoneCancel(Collider2D obj)
 		{
 			if (obj.TryGetComponent(out HeroMovement heroMovement))
@@ -103,6 +103,9 @@ namespace CodeBase.Units.Enemy
 			SpawnLandVfx();
 		}
 
+		private bool HeroAtSameHeight() => 
+			transform.position.y <= _hero.position.y + Mathf.Abs(_collisionDetector.Bounds.extents.y);
+
 		private void SpawnLandVfx()
 		{
 			Instantiate(_landVfx, transform.position - Vector3.up * _sprite.bounds.size.y / 2, Quaternion.identity);
@@ -110,6 +113,7 @@ namespace CodeBase.Units.Enemy
 
 		private void Jump()
 		{
+			_sfxPlayer.Play(_agroSfx);
 			FlipSprite();
 			
 			_isJumping = true;

@@ -8,6 +8,7 @@ namespace CodeBase.Services
 {
 	public class InputService : IInputService, IInitializable, IDisposable
 	{
+		public event Action BootstrapBtnPressed;
 		public event Action JumpBtnPressed;
 		public event Action InteractBtnPressed;
 		public event Action RestartBtnPressed;
@@ -31,6 +32,7 @@ namespace CodeBase.Services
 
 		private void SubscribeEvents()
 		{
+			_input.Initial.Bootstrap.performed += OnBootstrapActionPerformed;
 			_input.Player.Jump.performed += OnJumpActionPerformed;
 			_input.Player.Interact.performed += OnInteractActionPerformed;
 			_input.Gameplay.Restart.performed += OnRestartActionPerformed;
@@ -38,11 +40,13 @@ namespace CodeBase.Services
 
 		private void CleanUp()
 		{
+			_input.Initial.Bootstrap.performed -= OnBootstrapActionPerformed;
 			_input.Player.Jump.performed -= OnJumpActionPerformed;
 			_input.Player.Interact.performed -= OnInteractActionPerformed;
 			_input.Gameplay.Restart.performed -= OnRestartActionPerformed;
 		}
 
+		private void OnBootstrapActionPerformed(InputAction.CallbackContext obj) => BootstrapBtnPressed?.Invoke();
 		private void OnRestartActionPerformed(InputAction.CallbackContext obj) => RestartBtnPressed?.Invoke();
 		private void OnJumpActionPerformed(InputAction.CallbackContext ctx) => JumpBtnPressed?.Invoke();
 		private void OnInteractActionPerformed(InputAction.CallbackContext obj) => InteractBtnPressed?.Invoke();

@@ -27,6 +27,7 @@ namespace CodeBase.Claw
 		public void OnCatch()
 		{
 			_interactable.enabled = false;
+			_cube.StopPush();
 			_cube.enabled = false;
 			_rigidbody.constraints = RigidbodyConstraints2D.FreezeAll;
 		}

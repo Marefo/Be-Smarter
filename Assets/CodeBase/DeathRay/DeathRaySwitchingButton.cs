@@ -1,7 +1,9 @@
 using System;
+using CodeBase.Audio;
 using CodeBase.Logic;
 using CodeBase.Units.Hero;
 using UnityEngine;
+using Zenject;
 
 namespace CodeBase.DeathRay
 {
@@ -10,11 +12,20 @@ namespace CodeBase.DeathRay
 	{
 		public override event Action StateChanged;
 
+		[SerializeField] private AudioClip _interactSfx;
+		
 		private Interactable _interactable;
 		private Animator _animator;
+		private SFXPlayer _sfxPlayer;
 		
 		private readonly int _pressHash = Animator.StringToHash("Press");
 
+		[Inject]
+		private void Construct(SFXPlayer sfxPlayer)
+		{
+			_sfxPlayer = sfxPlayer;
+		}
+		
 		private void Awake()
 		{
 			_interactable = GetComponent<Interactable>();
@@ -31,9 +42,10 @@ namespace CodeBase.DeathRay
 			_interactable.Interacted -= OnInteract;
 		}
 
-		private void OnInteract(HeroMovement heroMovement)
+		private void OnInteract(HeroInteractable heroInteractable)
 		{
 			_animator.SetTrigger(_pressHash);
+			_sfxPlayer.Play(_interactSfx);
 			StateChanged?.Invoke();
 		}
 	}

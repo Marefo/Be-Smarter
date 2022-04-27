@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CodeBase.Audio;
 using CodeBase.Collisions;
 using CodeBase.Infrastructure;
 using CodeBase.Logic;
@@ -16,14 +17,16 @@ namespace CodeBase.Units.Enemy
 		protected int _moveDirection => GetMoveDirection();
 		
 		protected CoroutineRunner _coroutineRunner;
+		protected SFXPlayer _sfxPlayer;
 		protected SpriteRenderer _sprite;
 		protected CollisionDetector _collisionDetector;
 		protected float _currentHorizontalSpeed = 0;
 		protected bool _inputDisabled = false;
 
-		public void Construct(CoroutineRunner coroutineRunner)
+		public void Construct(CoroutineRunner coroutineRunner, SFXPlayer sfxPlayer)
 		{
 			_coroutineRunner = coroutineRunner;
+			_sfxPlayer = sfxPlayer;
 		}
 
 		protected void Init()

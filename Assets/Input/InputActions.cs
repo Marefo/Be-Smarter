@@ -204,6 +204,33 @@ public class @InputActions : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""Initial"",
+            ""id"": ""8e7a25c3-3590-4d2c-b6ed-4022192801f8"",
+            ""actions"": [
+                {
+                    ""name"": ""Bootstrap"",
+                    ""type"": ""Button"",
+                    ""id"": ""c5721f78-e429-4e0f-9097-309c0e24e8d0"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""a34983b4-e5ef-4d0e-84bf-a1963b9a9cc4"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Bootstrap"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -216,6 +243,9 @@ public class @InputActions : IInputActionCollection, IDisposable
         // Gameplay
         m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
         m_Gameplay_Restart = m_Gameplay.FindAction("Restart", throwIfNotFound: true);
+        // Initial
+        m_Initial = asset.FindActionMap("Initial", throwIfNotFound: true);
+        m_Initial_Bootstrap = m_Initial.FindAction("Bootstrap", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -343,6 +373,39 @@ public class @InputActions : IInputActionCollection, IDisposable
         }
     }
     public GameplayActions @Gameplay => new GameplayActions(this);
+
+    // Initial
+    private readonly InputActionMap m_Initial;
+    private IInitialActions m_InitialActionsCallbackInterface;
+    private readonly InputAction m_Initial_Bootstrap;
+    public struct InitialActions
+    {
+        private @InputActions m_Wrapper;
+        public InitialActions(@InputActions wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Bootstrap => m_Wrapper.m_Initial_Bootstrap;
+        public InputActionMap Get() { return m_Wrapper.m_Initial; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(InitialActions set) { return set.Get(); }
+        public void SetCallbacks(IInitialActions instance)
+        {
+            if (m_Wrapper.m_InitialActionsCallbackInterface != null)
+            {
+                @Bootstrap.started -= m_Wrapper.m_InitialActionsCallbackInterface.OnBootstrap;
+                @Bootstrap.performed -= m_Wrapper.m_InitialActionsCallbackInterface.OnBootstrap;
+                @Bootstrap.canceled -= m_Wrapper.m_InitialActionsCallbackInterface.OnBootstrap;
+            }
+            m_Wrapper.m_InitialActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Bootstrap.started += instance.OnBootstrap;
+                @Bootstrap.performed += instance.OnBootstrap;
+                @Bootstrap.canceled += instance.OnBootstrap;
+            }
+        }
+    }
+    public InitialActions @Initial => new InitialActions(this);
     public interface IPlayerActions
     {
         void OnMove(InputAction.CallbackContext context);
@@ -352,5 +415,9 @@ public class @InputActions : IInputActionCollection, IDisposable
     public interface IGameplayActions
     {
         void OnRestart(InputAction.CallbackContext context);
+    }
+    public interface IInitialActions
+    {
+        void OnBootstrap(InputAction.CallbackContext context);
     }
 }

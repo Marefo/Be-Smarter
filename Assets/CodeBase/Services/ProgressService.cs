@@ -5,23 +5,16 @@ namespace CodeBase.Services
 {
 	public class ProgressService : IProgressService
 	{
+		private const string SavedSceneKey = "Scene";
 		private const int FirstLevelIndex = 1;
 
 		public int SceneIndex { get => LoadSavedScene(); set => SaveScene(value); }
-		
-		private ProgressStaticData _progress => _staticDataService.LoadProgressData();
-		private readonly StaticDataService _staticDataService;
-
-		public ProgressService(StaticDataService staticDataService)
-		{
-			_staticDataService = staticDataService;
-		}
 
 		public int GetFirstLevelIndex() => FirstLevelIndex;
 
 		private int LoadSavedScene()
 		{
-			int savedSceneIndex = _progress.SceneIndex;
+			int savedSceneIndex = PlayerPrefs.GetInt(SavedSceneKey, 0);
 			
 			if (savedSceneIndex == 0)
 			{
@@ -32,6 +25,6 @@ namespace CodeBase.Services
 			return savedSceneIndex;
 		}
 
-		private void SaveScene(int index) => _progress.SceneIndex = index;
+		private void SaveScene(int index) => PlayerPrefs.SetInt(SavedSceneKey, index);
 	}
 }

@@ -7,6 +7,6 @@ namespace CodeBase.Cube
 	{
 		public float PushDistance;
 		public float PushHeight;
-		public float PushDuration;
+		public float PushSecondsPerUnit;
 	}
 }

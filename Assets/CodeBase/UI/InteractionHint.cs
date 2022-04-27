@@ -26,7 +26,6 @@ namespace CodeBase.UI
 			_interactable.InteractionEnabled += Show;
 			_interactable.InteractionDisabled += Hide;
 			_interactable.InteractionStarted += Hide;
-			_interactable.InteractionFinished += Show;
 		}
 
 		private void OnDisable()
@@ -34,7 +33,6 @@ namespace CodeBase.UI
 			_interactable.InteractionEnabled -= Show;
 			_interactable.InteractionDisabled -= Hide;
 			_interactable.InteractionStarted -= Hide;
-			_interactable.InteractionFinished -= Show;
 		}
 
 		private void Start() => Hide();

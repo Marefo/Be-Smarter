@@ -191,6 +191,33 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Initial",
+            "id": "8e7a25c3-3590-4d2c-b6ed-4022192801f8",
+            "actions": [
+                {
+                    "name": "Bootstrap",
+                    "type": "Button",
+                    "id": "c5721f78-e429-4e0f-9097-309c0e24e8d0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "a34983b4-e5ef-4d0e-84bf-a1963b9a9cc4",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Bootstrap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

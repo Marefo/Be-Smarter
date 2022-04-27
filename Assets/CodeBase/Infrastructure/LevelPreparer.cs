@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Audio;
 using CodeBase.Extensions;
+using CodeBase.Logic;
 using CodeBase.Services;
 using CodeBase.StaticData;
 using CodeBase.UI;
@@ -14,6 +16,8 @@ namespace CodeBase.Infrastructure
 {
 	public class LevelPreparer : MonoBehaviour
 	{
+		[SerializeField] private AudioClip _backgroundMusic;
+		
 		private CoroutineRunner _coroutineRunner;
 		private StaticDataService _staticDataService;
 		private LevelStaticData _levelData;
@@ -23,10 +27,12 @@ namespace CodeBase.Infrastructure
 		private LoadingCurtain _loadingCurtain;
 		private readonly List<UnitDeath> _enemies = new List<UnitDeath>();
 		private bool _unitsActivated = false;
+		private BackgroundMusicPlayer _backgroundMusicPlayer;
 
 		[Inject]
 		private void Construct(GameStatus gameStatus, HeroMovement heroMovement, CoroutineRunner coroutineRunner, 
-			EnemyFactory enemyFactory, StaticDataService staticDataService, LoadingCurtain loadingCurtain)
+			EnemyFactory enemyFactory, StaticDataService staticDataService, LoadingCurtain loadingCurtain,
+			BackgroundMusicPlayer backgroundMusicPlayer)
 		{
 			_gameStatus = gameStatus;
 			_heroMovement = heroMovement;
@@ -34,6 +40,7 @@ namespace CodeBase.Infrastructure
 			_staticDataService = staticDataService;
 			_enemyFactory = enemyFactory;
 			_loadingCurtain = loadingCurtain;
+			_backgroundMusicPlayer = backgroundMusicPlayer;
 		}
 
 		private void Awake()
@@ -42,6 +49,7 @@ namespace CodeBase.Infrastructure
 			SpawnEnemies();
 			InitGameStatus();
 			StartUnitsActivation();
+			_backgroundMusicPlayer.ChangeMusicTo(_backgroundMusic);
 		}
 
 		private void Start()

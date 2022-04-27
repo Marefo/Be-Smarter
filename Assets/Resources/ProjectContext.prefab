@@ -77,6 +77,10 @@ MonoBehaviour:
   _loadingCurtainPrefab: {fileID: 7103652248359352501, guid: 131eeeded22100344972c0930362fff2,
     type: 3}
   _coroutineRunner: {fileID: 8137673669925935706}
+  _backgroundMusicPlayer: {fileID: 730281000284026099, guid: 0d22e2d1f7e4651449602689314c18c6,
+    type: 3}
+  _sfxPlayer: {fileID: 7369087129097943615, guid: 8762d3a92a8979348b3f4cbbb04f27bf,
+    type: 3}
 --- !u!114 &8137673669925935706
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,6 +1,7 @@
 ﻿using CodeBase.Infrastructure;
 using CodeBase.Units;
 using CodeBase.Units.Enemy;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using Zenject;
@@ -10,6 +11,9 @@ namespace CodeBase.UI
 	public class EnemiesCounter : MonoBehaviour
 	{
 		[SerializeField] private TextMeshProUGUI _textField;
+		[Space(10)]
+		[SerializeField] private float _punchScaleForce = 0.1f;
+		[SerializeField] private float _punchScaleDuration = 0.1f;
 		
 		private int _maxEnemiesCount;
 		private int _currentEnemiesCount;
@@ -32,6 +36,7 @@ namespace CodeBase.UI
 		{
 			_currentEnemiesCount += 1;
 			UpdateText();
+			_textField.transform.DOPunchScale(Vector3.one * _punchScaleForce, _punchScaleDuration, 1);
 		}
 
 		private void UpdateText()

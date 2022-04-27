@@ -1,4 +1,5 @@
-﻿using CodeBase.EnemySpawner;
+﻿using CodeBase.Audio;
+using CodeBase.EnemySpawner;
 using CodeBase.Extensions;
 using CodeBase.Services;
 using CodeBase.StaticData;
@@ -12,21 +13,25 @@ namespace CodeBase.Infrastructure
 	{
 		private readonly StaticDataService _staticDataService;
 		private readonly CoroutineRunner _coroutineRunner;
+		private readonly SFXPlayer _sfxPlayer;
 		private readonly LevelPreparer _levelPreparer;
 
-		public EnemyFactory(StaticDataService staticDataService, CoroutineRunner coroutineRunner)
+		public EnemyFactory(StaticDataService staticDataService, CoroutineRunner coroutineRunner, SFXPlayer sfxPlayer)
 		{
 			_staticDataService = staticDataService;
 			_coroutineRunner = coroutineRunner;
+			_sfxPlayer = sfxPlayer;
 		}
 
 		public GameObject CreateEnemy(EnemyTypeId enemyTypeId, Vector3 position)
 		{
 			EnemyStaticData enemyData = _staticDataService.LoadEnemyData(enemyTypeId);
 			GameObject enemy = Object.Instantiate(enemyData.Prefab, position, Quaternion.identity);
-			EnemyMovement movement = enemy.GetComponentInObjectOrChildren<EnemyMovement>();
+			EnemyMovement enemyMovement = enemy.GetComponentInObjectOrChildren<EnemyMovement>();
+			EnemyDeath enemyDeath = enemy.GetComponentInObjectOrChildren<EnemyDeath>();
 			
-			movement.Construct(_coroutineRunner);
+			enemyMovement.Construct(_coroutineRunner, _sfxPlayer);
+			enemyDeath.Construct(_sfxPlayer);
 
 			return enemy;
 		}

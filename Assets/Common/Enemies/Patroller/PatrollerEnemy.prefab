@@ -5053,6 +5053,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _vfxPrefab: {fileID: 1968986386834678192, guid: 3c7059d83fe31ff4789dcc24ae8d0a0b,
     type: 3}
+  _sfx: {fileID: 8300000, guid: f96a86f5b246add40b87e2a3348bcc83, type: 3}
 --- !u!114 &5741252669949535902
 MonoBehaviour:
   m_ObjectHideFlags: 0

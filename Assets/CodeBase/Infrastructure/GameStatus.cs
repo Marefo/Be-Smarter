@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using CodeBase.Audio;
+using CodeBase.Infrastructure.AssetManagement;
 using CodeBase.UI;
 using CodeBase.Units;
 using CodeBase.Units.Enemy;
@@ -16,13 +18,19 @@ namespace CodeBase.Infrastructure
 		public event Action<UnitDeath> EnemyDied;
 
 		private readonly LoadingCurtain _loadingCurtain;
-		
+		private readonly AssetProvider _assetProvider;
+		private readonly SFXPlayer _sfxPlayer;
+
 		private HeroDeath _hero;
 		private List<UnitDeath> _enemies;
+		private AudioClip _winSfx;
 
-		public GameStatus(LoadingCurtain loadingCurtain)
+		public GameStatus(AssetProvider assetProvider, SFXPlayer sfxPlayer)
 		{
-			_loadingCurtain = loadingCurtain;
+			_assetProvider = assetProvider;
+			_sfxPlayer = sfxPlayer;
+			
+			Init();
 		}
 
 		public void SetUnits(HeroDeath hero, List<UnitDeath> enemies)
@@ -33,6 +41,8 @@ namespace CodeBase.Infrastructure
 			EnemiesInitialized?.Invoke(enemies.Count);
 			SubscribeUnitEvents();
 		}
+
+		private void Init() => _winSfx = _assetProvider.LoadClip(AssetPath.WinAudioClip);
 
 		private void SubscribeUnitEvents()
 		{
@@ -70,10 +80,14 @@ namespace CodeBase.Infrastructure
 				_enemies.RemoveAll(x => x == null);
 			
 			if (_enemies.Count == 0)
-			{
-				Debug.Log("Won!");
-				Won?.Invoke();
-			}
+				OnWin();
+		}
+
+		private void OnWin()
+		{
+			Debug.Log("Won!");
+			_sfxPlayer.Play(_winSfx);
+			Won?.Invoke();
 		}
 
 		private void UnSubscribeEnemyEvents(UnitDeath enemy)

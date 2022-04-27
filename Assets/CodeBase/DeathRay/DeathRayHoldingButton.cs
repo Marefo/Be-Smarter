@@ -48,7 +48,7 @@ namespace CodeBase.DeathRay
 				
 				_animator.SetBool(_isPressedHash, true);
 			}
-				
+			
 			_activators.Add(activator);
 		}
 

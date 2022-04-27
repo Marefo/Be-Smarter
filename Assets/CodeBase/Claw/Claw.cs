@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeBase.Audio;
 using CodeBase.Infrastructure;
 using CodeBase.Logic;
 using DG.Tweening;
@@ -23,8 +24,11 @@ namespace CodeBase.Claw
 		[SerializeField] private SpriteRenderer _mountSprite;
 		[SerializeField] private SpriteRenderer _chainSprite;
 		[SerializeField] private SpriteRenderer _clawSprite;
+		[Space(10)]
+		[SerializeField] private AudioClip _splatSfx;
 		
 		private CoroutineRunner _coroutineRunner;
+		private SFXPlayer _sfxPlayer;
 		private Vector3 _clawDefaultPosition;
 		private Vector3 _chainDefaultPosition;
 		private Vector2 _chainDefaultSize;
@@ -32,9 +36,10 @@ namespace CodeBase.Claw
 		private float _catchPositionY;
 
 		[Inject]
-		private void Construct(CoroutineRunner coroutineRunner)
+		private void Construct(CoroutineRunner coroutineRunner, SFXPlayer sfxPlayer)
 		{
 			_coroutineRunner = coroutineRunner;
+			_sfxPlayer = sfxPlayer;
 		}
 
 		private void OnEnable()
@@ -73,6 +78,7 @@ namespace CodeBase.Claw
 
 		private void OnCatchComplete()
 		{
+			_sfxPlayer.Play(_splatSfx);
 			_caughtTarget.Transform.SetParent(_clawSprite.transform);
 			Shake(TryMoveUp);
 		}

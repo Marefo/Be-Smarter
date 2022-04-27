@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd2e430c3df64e799846793f486639b8, type: 3}
   m_Name: StayPushSettings
   m_EditorClassIdentifier: 
-  PushDistance: 0.2
-  PushHeight: 0.1
-  PushDuration: 0.15
+  PushDistance: 0.36
+  PushHeight: 0.2
+  PushSecondsPerUnit: 0.45

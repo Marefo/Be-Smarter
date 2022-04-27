@@ -14,12 +14,10 @@ namespace CodeBase.Services
 		private const string EnemiesPath = "StaticData/Enemies";
 		private const string LevelsPath = "StaticData/Levels";
 		private const string GameSettingsPath = "StaticData/GameSettings";
-		private const string ProgressPath = "StaticData/ProgressStaticData";
 
 		private Dictionary<EnemyTypeId, EnemyStaticData> _enemies;
 		private Dictionary<string, LevelStaticData> _levels;
 		private GameSettings _gameSettings;
-		private ProgressStaticData _progress;
 
 		public StaticDataService()
 		{
@@ -31,7 +29,6 @@ namespace CodeBase.Services
 			_enemies = Resources.LoadAll<EnemyStaticData>(EnemiesPath).ToDictionary(x => x.EnemyTypeId, x => x);
 			_levels = Resources.LoadAll<LevelStaticData>(LevelsPath).ToDictionary(x => x.Name, x => x);
 			_gameSettings = Resources.Load<GameSettings>(GameSettingsPath);
-			_progress = Resources.Load<ProgressStaticData>(ProgressPath);
 		}
 
 		public EnemyStaticData LoadEnemyData(EnemyTypeId enemyTypeId) => 
@@ -41,11 +38,5 @@ namespace CodeBase.Services
 			_levels.TryGetValue(name, out LevelStaticData levelData) ? levelData : null;
 
 		public GameSettings LoadGameSettings() => _gameSettings;
-		
-		public ProgressStaticData LoadProgressData()
-		{
-			Debug.Log(_progress);
-			return _progress;
-		}
 	}
 }

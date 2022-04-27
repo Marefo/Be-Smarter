@@ -269,6 +269,8 @@ MonoBehaviour:
   _mountSprite: {fileID: 7043672714755217561}
   _chainSprite: {fileID: 7043672713832064735}
   _clawSprite: {fileID: 7043672714735613357}
+  _whooshSfx: {fileID: 8300000, guid: 2bc91ce285e765b4c9540023860b1189, type: 3}
+  _splatSfx: {fileID: 8300000, guid: 11f148b7c888e1a42a855842e88187a6, type: 3}
 --- !u!1 &7043672714735613355
 GameObject:
   m_ObjectHideFlags: 0

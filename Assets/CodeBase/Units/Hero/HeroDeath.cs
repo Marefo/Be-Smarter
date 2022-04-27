@@ -1,7 +1,9 @@
 ﻿using System;
+using CodeBase.Audio;
 using CodeBase.Camera;
 using CodeBase.Logic;
 using UnityEngine;
+using Zenject;
 
 namespace CodeBase.Units.Hero
 {
@@ -12,14 +14,28 @@ namespace CodeBase.Units.Hero
 		[SerializeField] private CameraShake _cameraShake;
 		[SerializeField] private CameraShakeSettings _cameraShakeSettings;
 		[Space(10)]
-		[SerializeField] private GameObject _vfxPrefab;
 		[SerializeField] private SpriteRenderer _spriteRenderer;
+		[SerializeField] private GameObject _vfxPrefab;
+		[SerializeField] private AudioClip _sfx;
+		
+		private SFXPlayer _sfxPlayer;
+		private bool _dead = false;
 
+		[Inject]
+		private void Construct(SFXPlayer sfxPlayer)
+		{
+			_sfxPlayer = sfxPlayer;
+		}
+		
 		public override void Die()
 		{
+			if(_dead) return;
+			_dead = true;
+			
 			if (TryGetComponent(out HeroMovement heroMove))
 				heroMove.enabled = false;
-			
+
+			_sfxPlayer.Play(_sfx);
 			ShakeCamera();
 			HideSprite();
 			SpawnVfx();

@@ -91,6 +91,22 @@ namespace CodeBase.Collisions
 			_boxRays = new BoxRays(topRay, bottomRay, leftRay, rightRay);
 		}
 
+		public bool CollideBottomInPoint(Vector3 point)
+		{
+			Bounds bounds = _settings.UnitBounds;
+			bounds.center = point;
+			
+			RayData bottomRay = new RayData(
+				new Vector2(bounds.min.x + _settings.RaysShift, bounds.min.y + _settings.RaysInnerOffset),
+				new Vector2(bounds.max.x - _settings.RaysShift, bounds.min.y + _settings.RaysInnerOffset),
+				Vector2.down, _settings.VerticalRaysLength
+			);
+
+			bool collideBottom = RaysDetect(bottomRay);
+
+			return collideBottom;
+		}
+		
 		public void UpdateBoxCollisions()
 		{
 			LastFrameBoxCollisions.BottomCollision = BoxCollisions.BottomCollision;
