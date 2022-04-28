@@ -15,9 +15,10 @@ MonoBehaviour:
   MaxMoveSpeed: 2.3
   Acceleration: 6
   DeAcceleration: 9
+  ClosestPointFindAttempts: 20
   MaxTilt: 7
   TiltSpeed: 18
-  ClimbDuration: 0.06
+  ClimbDuration: 0.05
   ClimbAssistHeight: 0.1
   MinFallSpeed: 7
   MaxFallSpeed: 15

@@ -467,6 +467,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _textField: {fileID: 155944509028736030}
+  _punchScaleForce: 0.1
+  _punchScaleDuration: 0.1
 --- !u!1 &155944509028736028
 GameObject:
   m_ObjectHideFlags: 0

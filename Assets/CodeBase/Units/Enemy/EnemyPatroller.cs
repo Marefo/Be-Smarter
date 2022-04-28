@@ -24,23 +24,19 @@ namespace CodeBase.Units.Enemy
 			_animator = GetComponent<UnitAnimator>();
 		}
 
-		private void Start()
-		{
-			InitBrakeVfx();
-		}
+		private void Start() => InitBrakeVfx();
 
 		private void Update()
 		{
-			_collisionDetector.CalculateRaysPosition();
-			_collisionDetector.UpdateBoxCollisions();
-			_collisionDetector.UpdateCollisionEvents();
+			UpdateCollisionDetector();
 			
 			if(_activated == false || _wayPoints == null) return;
 
-			Move();
+			Patrol();
 			Tilt();
 			FlipWalkVfx();
 			CalculateGravity();
+			Move();
 		}
 
 		public void SetWayPoints(List<Transform> wayPoints)
@@ -61,6 +57,13 @@ namespace CodeBase.Units.Enemy
 		protected override int GetMoveDirection() => 
 			_wayPoints[_previousPointIndex].position.x > _wayPoints[_targetPointIndex].position.x ? -1 : 1;
 
+		private void UpdateCollisionDetector()
+		{
+			_collisionDetector.CalculateRaysPosition();
+			_collisionDetector.UpdateBoxCollisions();
+			_collisionDetector.UpdateCollisionEvents();
+		}
+		
 		private void InitBrakeVfx()
 		{
 			_brakeVfxEmission = _brakeVfx.emission;
@@ -80,7 +83,48 @@ namespace CodeBase.Units.Enemy
 			else if(_moveDirection < 0)
 				brakeVfxVelocityOverLifetime.x = Mathf.Abs(brakeVfxVelocityOverLifetime.x.constant);
 		}
+		
+		private void Move()
+		{
+			Vector3 currentPosition = transform.position;
+			Vector3 speed = new Vector3(_currentHorizontalSpeed, _currentVerticalSpeed);
+			Vector3 move = speed * Time.deltaTime;
+			Vector3 furthestPoint = currentPosition + move;
+			Collider2D furthestPointCollision = _collisionDetector.GetCollisionInPoint(furthestPoint);
+			bool canMove = furthestPointCollision == null;
 
+			if (canMove)
+				transform.position += move;
+			else
+				MoveToClosestAvailablePoint(move, furthestPointCollision);
+		}
+		
+		private void MoveToClosestAvailablePoint(Vector3 move, Collider2D collided)
+		{
+			Vector3 currentPosition = transform.position;
+			Vector3 furthestPoint = currentPosition + move;
+
+			for (int i = 1; i < _enemyMovementSettings.ClosestPointFindAttempts; i++)
+			{
+				float t = (float) i / _enemyMovementSettings.ClosestPointFindAttempts;
+				Vector2 currentTryPosition = Vector2.Lerp(currentPosition, furthestPoint, t);
+
+				if (_collisionDetector.CanMoveToPoint(currentTryPosition) == false)
+				{
+					if (i == 1)
+					{
+						Vector2 closestPoint = collided.ClosestPoint(transform.position);
+						Vector3 dir = transform.position - new Vector3(closestPoint.x, closestPoint.y, 0);
+						transform.position += dir.normalized * move.magnitude;
+					}
+					
+					continue;
+				}
+
+				transform.position = currentTryPosition;
+			}
+		}
+		
 		private void StartPatrolling()
 		{
 			transform.position = new Vector3(_wayPoints[0].position.x, transform.position.y, transform.position.z);
@@ -88,7 +132,7 @@ namespace CodeBase.Units.Enemy
 			_patrolling = true;
 		}
 
-		private void Move()
+		private void Patrol()
 		{
 			if (ReachedTargetPoint() && _patrolling)
 				OnReachTargetPoint();
@@ -100,7 +144,7 @@ namespace CodeBase.Units.Enemy
 				_animator.PlayWalk(0);
 				return;
 			}
-
+			
 			if (_patrolling)
 			{
 				StopBrakeVfx();
@@ -113,9 +157,7 @@ namespace CodeBase.Units.Enemy
 				PlayBrakeVfx();
 				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _enemyMovementSettings.DeAcceleration * Time.deltaTime);
 			}
-			
-			transform.position += Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
-			
+
 			float animationSpeed = Mathf.Clamp(Mathf.Abs(_currentHorizontalSpeed), 0, 1.5f);
 			_animator.PlayWalk(animationSpeed);
 		}
@@ -150,13 +192,18 @@ namespace CodeBase.Units.Enemy
 			_patrolling = true;
 		}
 
-		private void CalculateGravity() {
-			if (_collisionDetector.BoxCollisions.BottomCollision == false)
-				_currentVerticalSpeed -= _enemyMovementSettings.FallSpeed * Time.deltaTime;
-			else if(_currentVerticalSpeed < 0)
-				_currentVerticalSpeed = 0;
-			
-			transform.position += Vector3.up * _currentVerticalSpeed * Time.deltaTime;
+		private void CalculateGravity()
+		{
+			if (_collisionDetector.BoxCollisions.BottomCollision)
+			{
+				if(_currentVerticalSpeed < 0)
+					_currentVerticalSpeed = 0;
+			}
+			else
+			{
+				_currentVerticalSpeed = Mathf.Clamp(_currentVerticalSpeed - _enemyMovementSettings.FallSpeed * Time.deltaTime,
+					-_enemyMovementSettings.MaxFallSpeed, float.MaxValue);
+			}
 		}
 	}
 }

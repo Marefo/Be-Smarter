@@ -59,6 +59,8 @@ namespace CodeBase.Units.Enemy
 			Vector2 climbPoint = _collisionDetector.GetClimbPointToCollider(collided, _enemyMovementSettings.ClimbAssistHeight);
 			bool canClimbAssist = climbPoint != Vector2.zero;
 
+			Debug.Log($"{gameObject.name} / canClimbAssist({canClimbAssist})");
+			
 			if (canClimbAssist && _inputDisabled == false)
 			{
 				_inputDisabled = true;

@@ -9,6 +9,8 @@ namespace CodeBase.Units.Hero
 		public float Acceleration;
 		public float DeAcceleration;
 		[Space(10)]
+		public int ClosestPointFindAttempts;
+		[Space(10)]
 		public float MaxTilt;
 		public float TiltSpeed;
 		[Space(10)]

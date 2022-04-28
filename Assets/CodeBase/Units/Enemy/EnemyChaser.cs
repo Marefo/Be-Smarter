@@ -1,4 +1,7 @@
-﻿using CodeBase.Audio;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CodeBase.Audio;
 using CodeBase.Logic;
 using CodeBase.Units.Hero;
 using DG.Tweening;
@@ -49,9 +52,7 @@ namespace CodeBase.Units.Enemy
 
 		private void Update()
 		{
-			_collisionDetector.CalculateRaysPosition();
-			_collisionDetector.UpdateBoxCollisions();
-			_collisionDetector.UpdateCollisionEvents();
+			UpdateCollisionDetector();
 			
 			if(_activated == false) return;
 			
@@ -60,6 +61,7 @@ namespace CodeBase.Units.Enemy
 			
 			Tilt();
 			CalculateGravity();
+			Move();
 		}
 
 		public override void Disable()
@@ -73,13 +75,20 @@ namespace CodeBase.Units.Enemy
 
 		protected override int GetMoveDirection() => _hero.position.x > transform.position.x ? 1 : -1;
 
+		private void UpdateCollisionDetector()
+		{
+			_collisionDetector.CalculateRaysPosition();
+			_collisionDetector.UpdateBoxCollisions();
+			_collisionDetector.UpdateCollisionEvents();
+		}
+
 		private void OnAgroZoneEnter(Collider2D obj)
 		{
 			if (obj.TryGetComponent(out HeroMovement heroMovement) == false) return;
 
 			_hero = heroMovement.transform;
 			
-			if (BlockedByCube() == false && HeroAtSameHeight() == true)
+			if (BlockedByCube() == false && HeroAtSameHeight())
 				Jump();
 			else
 				_canChase = true;
@@ -91,10 +100,7 @@ namespace CodeBase.Units.Enemy
 				_canChase = false;
 		}
 
-		private void OnCollision()
-		{
-			StopJump();
-		}
+		private void OnCollision() => StopJump();
 
 		private void OnBottomCollision()
 		{
@@ -103,14 +109,11 @@ namespace CodeBase.Units.Enemy
 			SpawnLandVfx();
 		}
 
-		private bool HeroAtSameHeight() => 
-			transform.position.y <= _hero.position.y + Mathf.Abs(_collisionDetector.Bounds.extents.y);
+		private bool HeroAtSameHeight() => transform.position.y <= _hero.position.y + Mathf.Abs(_collisionDetector.Bounds.extents.y);
 
-		private void SpawnLandVfx()
-		{
+		private void SpawnLandVfx() => 
 			Instantiate(_landVfx, transform.position - Vector3.up * _sprite.bounds.size.y / 2, Quaternion.identity);
-		}
-
+		
 		private void Jump()
 		{
 			_sfxPlayer.Play(_agroSfx);
@@ -125,9 +128,19 @@ namespace CodeBase.Units.Enemy
 			
 			_doJump = transform.DOJump(jumpTargetPosition, _chaserSettings.JumpHeight, 1, _chaserSettings.JumpDuration)
 				.OnComplete(OnJumpComplete)
+				.OnUpdate(OnJumpUpdate)
 				.OnKill(() => _isJumpKilled = true);
 			
 			_animator.PlayJump();
+		}
+
+		private void OnJumpUpdate()
+		{
+			if (_collisionDetector.BoxCollisions.TopCollision || _collisionDetector.BoxCollisions.LeftCollision ||
+			    _collisionDetector.BoxCollisions.RightCollision)
+			{
+				StopJump();
+			}
 		}
 
 		private void FlipSprite()
@@ -155,13 +168,63 @@ namespace CodeBase.Units.Enemy
 			_canChase = true;
 		}
 
-		private void CalculateGravity() {
-			if (_collisionDetector.BoxCollisions.BottomCollision == false && _isJumping == false)
-				_currentVerticalSpeed -= _enemyMovementSettings.FallSpeed * Time.deltaTime;
-			else if(_currentVerticalSpeed < 0)
-				_currentVerticalSpeed = 0;
-			
-			transform.position += Vector3.up * _currentVerticalSpeed * Time.deltaTime;
+		private void Move()
+		{
+			Vector3 currentPosition = transform.position;
+			Vector3 speed = new Vector3(_currentHorizontalSpeed, _currentVerticalSpeed);
+			Vector3 move = speed * Time.deltaTime;
+			Vector3 furthestPoint = currentPosition + move;
+			Collider2D furthestPointCollision = _collisionDetector.GetCollisionInPoint(furthestPoint);
+			bool canMove = furthestPointCollision == null;
+
+			if (canMove)
+				transform.position += move;
+			else
+				MoveToClosestAvailablePoint(move, furthestPointCollision);
+		}
+		
+		private void MoveToClosestAvailablePoint(Vector3 move, Collider2D collided)
+		{
+			Vector3 currentPosition = transform.position;
+			Vector3 furthestPoint = currentPosition + move;
+
+			for (int i = 1; i < _enemyMovementSettings.ClosestPointFindAttempts; i++)
+			{
+				float t = (float) i / _enemyMovementSettings.ClosestPointFindAttempts;
+				Vector2 currentTryPosition = Vector2.Lerp(currentPosition, furthestPoint, t);
+
+				if (_collisionDetector.CanMoveToPoint(currentTryPosition) == false)
+				{
+					if (i == 1)
+					{
+						Vector2 closestPoint = collided.ClosestPoint(transform.position);
+						Vector3 dir = transform.position - new Vector3(closestPoint.x, closestPoint.y, 0);
+						
+						if(_currentVerticalSpeed < 0)
+							_currentVerticalSpeed = 0;
+						
+						transform.position += dir.normalized * move.magnitude;
+					}
+					
+					continue;
+				}
+
+				transform.position = currentTryPosition;
+			}
+		}
+
+		private void CalculateGravity()
+		{
+			if (_collisionDetector.BoxCollisions.BottomCollision)
+			{
+				if(_currentVerticalSpeed < 0)
+					_currentVerticalSpeed = 0;
+			}
+			else if (_isJumping == false)
+			{
+				_currentVerticalSpeed = Mathf.Clamp(_currentVerticalSpeed - _enemyMovementSettings.FallSpeed * Time.deltaTime,
+					-_enemyMovementSettings.MaxFallSpeed, float.MaxValue);
+			}
 		}
 
 		private void Chase()
@@ -188,8 +251,6 @@ namespace CodeBase.Units.Enemy
 			}
 			else
 				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _enemyMovementSettings.DeAcceleration * Time.deltaTime);
-
-			transform.position += Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
 			
 			float animationSpeed = Mathf.Clamp(Mathf.Abs(_currentHorizontalSpeed), 0, 1.5f);
 			_animator.PlayWalk(animationSpeed);

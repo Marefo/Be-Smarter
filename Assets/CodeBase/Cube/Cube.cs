@@ -133,10 +133,11 @@ namespace CodeBase.Cube
 		private void Push()
 		{
 			_sfxPlayer.Play(_pushSfx);
-			
-			float pushDistance = _heroMovement.SpeedPercent > 0.3f ? _walkPushSettings.PushDistance : _stayPushSettings.PushDistance;
-			float pushHeight = _heroMovement.SpeedPercent > 0.3f ? _walkPushSettings.PushHeight : _stayPushSettings.PushHeight;
-			float pushSecondsPerUnit = _heroMovement.SpeedPercent > 0.3f ? _walkPushSettings.PushSecondsPerUnit : _stayPushSettings.PushSecondsPerUnit;
+
+			float walkPushThreshold = 0.3f;
+			float pushDistance = _heroMovement.SpeedPercent > walkPushThreshold ? _walkPushSettings.PushDistance : _stayPushSettings.PushDistance;
+			float pushHeight = _heroMovement.SpeedPercent > walkPushThreshold ? _walkPushSettings.PushHeight : _stayPushSettings.PushHeight;
+			float pushSecondsPerUnit = _heroMovement.SpeedPercent > walkPushThreshold ? _walkPushSettings.PushSecondsPerUnit : _stayPushSettings.PushSecondsPerUnit;
 
 			Vector3 currentPosition = transform.position;
 			Vector3 targetPosition = currentPosition + Vector3.right * _heroMovement.MoveDirection * pushDistance;

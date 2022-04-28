@@ -11,11 +11,13 @@ namespace CodeBase.Units.Enemy
 		public float MaxMoveSpeed;
 		[Space(10)]
 		public float FallSpeed;
+		public float MaxFallSpeed;
 		[Space(10)]
 		public float MaxTilt;
 		public float TiltSpeed;
 		[Space(10)]
 		public float ClimbAssistHeight;
 		public float ClimbDuration;
+		public int ClosestPointFindAttempts;
 	}
 }

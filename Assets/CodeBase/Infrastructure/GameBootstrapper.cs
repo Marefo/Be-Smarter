@@ -17,7 +17,10 @@ namespace CodeBase.Infrastructure
 			_inputService = inputService;
 		}
 
-		private void Start() => _inputService.BootstrapBtnPressed += StartBootstrap;
+		private void Start()
+		{
+			_inputService.BootstrapBtnPressed += StartBootstrap;
+		}
 
 		private void OnDestroy() => _inputService.BootstrapBtnPressed -= StartBootstrap;
 

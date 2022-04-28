@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CodeBase.Audio;
 using CodeBase.Collisions;
 using CodeBase.DeathRay;
-using CodeBase.Infrastructure;
 using CodeBase.Logic;
 using CodeBase.Services;
-using CodeBase.StaticData;
 using DG.Tweening;
 using UnityEngine;
 using Zenject;
@@ -26,8 +23,6 @@ namespace CodeBase.Units.Hero
 		[SerializeField] private ParticleSystem _walkVfx;
 		[Space(10)]
 		[SerializeField] private AudioClip _jumpSfx;
-
-		private const int ClosestPointFindAttempts = 10;
 
 		private IInputService _inputService;
 		private Vector2 _colliderBottomCenter;
@@ -81,19 +76,20 @@ namespace CodeBase.Units.Hero
 
 		private void Update()
 		{
+			CalculateVelocity();
 			UpdateCollisionDetector();
 
 			if(_activated == false) return;
 
-			CalculateVelocity();
 			FlipSprite();
 			Walk();
 			Tilt();
 			CalculateJumpApex();
 			CalculateGravity();
-			CalculateJump();
 			FlipWalkVfx();
 			ControlWalkVfxVisibility();
+
+			Move();
 		}
 
 		public override void Disable()
@@ -129,6 +125,21 @@ namespace CodeBase.Units.Hero
 			Jump();
 		}
 
+		private void Move()
+		{
+			Vector3 currentPosition = transform.position;
+			Vector3 speed = new Vector3(_currentHorizontalSpeed, _currentVerticalSpeed);
+			Vector3 move = speed * Time.deltaTime;
+			Vector3 furthestPoint = currentPosition + move;
+			Collider2D furthestPointCollision = _collisionDetector.GetCollisionInPoint(furthestPoint);
+			bool canMove = furthestPointCollision == null;
+
+			if (canMove)
+				transform.position += move;
+			else
+				MoveToClosestAvailablePoint(move, furthestPointCollision);
+		}
+		
 		private void ControlWalkVfxVisibility()
 		{
 			ParticleSystem.EmissionModule walkVfxEmission = _walkVfx.emission;
@@ -178,16 +189,6 @@ namespace CodeBase.Units.Hero
 
 		private void Walk()
 		{
-			if (CanMove() == false)
-			{
-				_animator.PlayWalk(0);
-
-				if (TryClimbAssist() == false)
-					MoveToClosestAvailablePoint();
-				
-				return;
-			}
-
 			if (_inputService.AxisX != 0)
 			{
 				ResetSpeedForOppositeDirection();
@@ -201,12 +202,22 @@ namespace CodeBase.Units.Hero
 			else
 				_currentHorizontalSpeed = Mathf.MoveTowards(_currentHorizontalSpeed, 0, _settings.DeAcceleration * Time.deltaTime);
 
-			transform.position += Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
+			if (CanMove() == false)
+			{
+				if (TryClimbAssist() == false && _inputService.AxisX != 0)
+					_currentHorizontalSpeed = 0;
+			}
 
 			float animationSpeed = Mathf.Clamp(Mathf.Abs(_currentHorizontalSpeed), 0, 1.5f);
 			_animator.PlayWalk(animationSpeed);
 		}
 
+		private bool CanMove()
+		{
+			return _inputService.AxisX > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
+			       _inputService.AxisX < 0 && _collisionDetector.BoxCollisions.LeftCollision == false;
+		}
+		
 		private void ResetSpeedForOppositeDirection()
 		{
 			if (_lastMoveDirection != 0)
@@ -218,32 +229,29 @@ namespace CodeBase.Units.Hero
 			_lastMoveDirection = Mathf.Sign(_inputService.AxisX);
 		}
 
-		private bool CanMove()
-		{
-			return _inputDisabled == false && 
-			       (_inputService.AxisX > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
-			       _inputService.AxisX < 0 && _collisionDetector.BoxCollisions.LeftCollision == false ||
-			       _inputService.AxisX == 0 && _lastMoveDirection > 0 && _collisionDetector.BoxCollisions.RightCollision == false ||
-			       _inputService.AxisX == 0 && _lastMoveDirection < 0 && _collisionDetector.BoxCollisions.LeftCollision == false);
-	}
-
-		private void MoveToClosestAvailablePoint()
+		private void MoveToClosestAvailablePoint(Vector3 move, Collider2D collided)
 		{
 			Vector3 currentPosition = transform.position;
-			Vector3 move = Vector3.right * _currentHorizontalSpeed * Time.deltaTime;
 			Vector3 furthestPoint = currentPosition + move;
 
-			for (int i = 1; i < ClosestPointFindAttempts; i++)
+			for (int i = 1; i < _settings.ClosestPointFindAttempts; i++)
 			{
-				float t = (float) i / ClosestPointFindAttempts;
-				float currentTryPositionX = Mathf.Lerp(currentPosition.x, furthestPoint.x, t);
-				Vector3 currentTryPosition = new Vector3(currentTryPositionX, currentPosition.y, currentPosition.z);
+				float t = (float) i / _settings.ClosestPointFindAttempts;
+				Vector2 currentTryPosition = Vector2.Lerp(currentPosition, furthestPoint, t);
 
-				if (_collisionDetector.CanMoveToPoint(currentTryPosition))
+				if (_collisionDetector.CanMoveToPoint(currentTryPosition) == false)
 				{
-					transform.position = currentTryPosition;
-					return;
+					if (i == 1)
+					{
+						Vector2 closestPoint = collided.ClosestPoint(transform.position);
+						Vector3 dir = transform.position - new Vector3(closestPoint.x, closestPoint.y, 0);
+						transform.position += dir.normalized * move.magnitude;
+					}
+					
+					continue;
 				}
+
+				transform.position = currentTryPosition;
 			}
 		}
 
@@ -270,12 +278,19 @@ namespace CodeBase.Units.Hero
 				
 			return canClimbAssist;
 		}
-
-		private void CalculateGravity() {
-			if (_collisionDetector.BoxCollisions.BottomCollision == false)
-				_currentVerticalSpeed = Mathf.Clamp(_currentVerticalSpeed - _fallSpeed * Time.deltaTime, -_settings.MaxFallSpeed, float.MaxValue);
-			else if(_currentVerticalSpeed < 0)
+		
+		private void CalculateGravity()
+		{
+			if (_collisionDetector.BoxCollisions.TopCollision && _currentVerticalSpeed > 0)
 				_currentVerticalSpeed = 0;
+			
+			if (_collisionDetector.BoxCollisions.BottomCollision)
+			{
+				if(_currentVerticalSpeed < 0)
+					_currentVerticalSpeed = 0;
+			}
+			else
+				_currentVerticalSpeed = Mathf.Clamp(_currentVerticalSpeed - _fallSpeed * Time.deltaTime, -_settings.MaxFallSpeed, float.MaxValue);
 		}
 
 		private void CalculateJumpApex()
@@ -287,14 +302,6 @@ namespace CodeBase.Units.Hero
 			}
 			else
 				_apexPoint = 0;
-		}
-
-		private void CalculateJump()
-		{
-			if (_collisionDetector.BoxCollisions.TopCollision == true && _currentVerticalSpeed > 0)
-				_currentVerticalSpeed = 0;
-			
-			transform.position += Vector3.up * _currentVerticalSpeed * Time.deltaTime;
 		}
 
 		private bool HasBufferedJump() => _lastJumpBtnPressTime + _settings.BufferedJumpTime > Time.time;
@@ -317,9 +324,6 @@ namespace CodeBase.Units.Hero
 			_walkVfx.transform.localRotation = _walkVfxDefaultRotation;
 		}
 		
-		private void UnParentWalkVfx()
-		{
-			_walkVfx.transform.SetParent(null);
-		}
+		private void UnParentWalkVfx() => _walkVfx.transform.SetParent(null);
 	}
 }

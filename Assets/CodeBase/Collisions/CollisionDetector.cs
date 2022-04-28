@@ -30,6 +30,14 @@ namespace CodeBase.Collisions
 		}
 		
 		public bool CanMoveToPoint(Vector3 point) => GetCollisionsInPoint(point).Count == 0;
+		
+		public Collider2D GetCollisionInPoint(Vector3 point)
+		{
+			List<Collider2D> overlapped = GetCollisionsInPoint(point);
+			Collider2D collided = overlapped.Count > 0 ? overlapped[0] : null;
+
+			return collided;
+		}
 
 		private List<Collider2D> GetCollisionsInPoint(Vector3 point)
 		{
@@ -163,6 +171,30 @@ namespace CodeBase.Collisions
 			results = rightResults.ToList();
 		}
 
+		public float GetClosestGroundHeight(Vector2 point)
+		{
+			float leftRaycastGroundHeight = GetGroundHeight(point - Vector2.right * Bounds.extents.x);
+			float centerRaycastGroundHeight = GetGroundHeight(point);
+			float rightRaycastGroundHeight = GetGroundHeight(point + Vector2.right * Bounds.extents.x);
+			
+			List<float> list = new List<float> { leftRaycastGroundHeight, centerRaycastGroundHeight, rightRaycastGroundHeight };
+			float closest = list.Aggregate((x,y) => Math.Abs(x - point.y) < Math.Abs(y - point.y) ? x : y);
+			
+			return closest;
+		}
+		
+		public float GetGroundHeight(Vector2 point)
+		{
+			List<RaycastHit2D> touched = new List<RaycastHit2D>();
+			
+			Physics2D.Raycast(point, Vector2.down, _settings.PhysicalObjFilter, touched);
+			touched = touched.Where(obj => obj.transform.gameObject != gameObject).ToList();
+			
+			float positionOnGround = touched.Count > 0 ? touched[0].point.y + Bounds.extents.y : point.y;
+			
+			return positionOnGround;
+		}
+		
 		private void GetComponentsFromList<T>(List<GameObject> gameObjects, out List<T> list)
 		{
 			list = new List<T>();

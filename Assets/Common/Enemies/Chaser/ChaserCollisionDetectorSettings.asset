@@ -31,9 +31,9 @@ MonoBehaviour:
     m_Bits: 256
   UnitBounds:
     m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 0.068, y: 0.103, z: 0}
-  SideRaysCount: 6
-  VerticalRaysLength: 0.04
-  HorizontalRaysLength: 0.02
+    m_Extent: {x: 0.068, y: 0.102, z: 0}
+  SideRaysCount: 3
+  VerticalRaysLength: 0.03
+  HorizontalRaysLength: 0.04
   RaysInnerOffset: 0.005
   RaysShift: 0.005
